@@ -1,0 +1,36 @@
+{
+  "$schema": "https://fundingjson.org/schema/v1.1.0.json",
+  "version": "v1.1.0",
+  "entity": {
+    "type": "individual",
+    "role": "maintainer",
+    "name": "Alp Albayrak",
+    "email": "alpalbayrak91@gmail.com",
+    "description": "Independent researcher and maintainer building open-source formal verification (Lean 4) and cryptographic audit tooling.",
+    "webpageUrl": {
+      "url": "https://alpalbayrak91-boop.github.io/proofgate/",
+      "wellKnown": ""
+    }
+  },
+  "projects": [
+    {
+      "guid": "proofgate-muhur-oss",
+      "name": "ProofGate & Muhur-Core",
+      "description": "Zero-dependency MIT Lean 4 faithfulness gate, Python AST verifier, and RFC 6962 / RFC 8785 cryptographic receipt toolkit.",
+      "webpageUrl": {
+        "url": "https://github.com/alpalbayrak91-boop/proofgate",
+        "wellKnown": ""
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/alpalbayrak91-boop/proofgate",
+        "wellKnown": ""
+      },
+      "licenses": ["spdx:MIT"],
+      "tags": ["formal-verification", "lean4", "static-analysis", "merkle-tree", "security"]
+    }
+  ],
+  "funding": {
+    "channels": [],
+    "plans": []
+  }
+}
