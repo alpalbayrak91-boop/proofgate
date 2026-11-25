@@ -1,0 +1,28 @@
+name: "ProofGate Omni-Gate Action"
+description: "Fail-closed Lean 4 faithfulness/spec-diff, Python AST, SARIF, and multi-agent eval verification."
+branding:
+  icon: "shield"
+  color: "green"
+inputs:
+  mode:
+    description: "Verification mode: check-lean, check-ast, diff-lean, spec-diff, eval-agents"
+    required: true
+    default: "check-lean"
+  target:
+    description: "Path to candidate Lean/Python/JSON file"
+    required: true
+  base_path:
+    description: "Baseline Lean specification path (required for diff-lean or spec-diff)"
+    required: false
+    default: ""
+  format:
+    description: "Output format: json, sarif, junit, promptfoo"
+    required: false
+    default: "json"
+  strict:
+    description: "Enable strict fail-closed checks (true/false)"
+    required: false
+    default: "true"
+runs:
+  using: "docker"
+  image: "Dockerfile"
