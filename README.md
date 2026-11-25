@@ -44,3 +44,9 @@ python3 -m proofgate.cli eval-agents runs.json --format promptfoo
 - **Legacy v0.2.0 Build Isolation Proof (`formal/ProofGateV3ReproBuildIsolationSoundness.lean`):** Preserved (`22` theorems).
 - **Static Showcase (`docs/index.html`):** Hash-pinned Strict-CSP3 (`0` inline-bypass, `0` external CDNs/URLs, `0` `chr(36)`, `0` backticks) *ProofGate v1.0 Interactive Verification Studio* running client-side WebCrypto RFC 6962 / SLSA v1.0 DSSE / Lean 4 / AST / Eval checks.
 - **Technical Paper & Archival:** `docs/PROOFGATE_PAPER.md`, `CITATION.cff`, and `.zenodo.json` (`0.00 USD` runtime cost, MIT License, Copyright 2026 Alp Albayrak).
+
+## What's New in v1.1.0 — Spec-Diff Reward-Hacking Gate (`audit_spec_vs_candidate_submission`)
+
+- **Baseline-vs-Candidate Integrity Audit (`proofgate.spec_diff_reward_hack_gate`):** Parses Lean 4 declarations with nested-comment stripping (`strip_lean_comments`), blocks deleted specifications (`REJECT_DELETED_SPEC_DECL`), theorem/lemma binder or return-type mutations (`REJECT_THEOREM_SIGNATURE_MUTATION`), and target `def`/`abbrev` body stubbing (`REJECT_TARGET_IMPLEMENTATION_REWRITE`).
+- **Concrete Local Typeclass Instance Blocker:** Prevents agents from shadowing core arithmetic or algebraic typeclasses (`Add`, `HAdd`, `Sub`, `Mul`, `Div`, `Mod`, `LE`, `LT`, `BEq`, `DecidableEq`, `Dvd`, `SMul`, `Inv`, etc.) on concrete core types (`Nat`, `Int`, `Rat`, `Real`, `Bool`, `UInt64`, etc.) via `[Add Nat]` / `(inst : Dvd Int)` local parameters (`REJECT_CONCRETE_LOCAL_INSTANCE`).
+- **Escape Token Guard & Agent Skill:** Rejects `sorry`, `admit`, `axiom `, `unsafe `, `implemented_by`, `extern `, `lcProof`, and `trustCompiler` in active code, bundled with an agentskills.io-compatible skill at `skills/proofgate-formal-gate/SKILL.md` (`44` unit/PBT tests passing with zero warnings).

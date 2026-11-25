@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "proofgate"
-version = "1.0.0"
+version = "1.1.0"
 description = "Zero-dependency Omni-Gate verification toolkit: Lean 4 faithfulness/vacuity/diff gates, Python AST verifier, SARIF v2.1.0, RFC 6962/8785, SLSA v1.0 DSSE, and non-compensatory multi-agent evaluation"
 readme = "README.md"
 license = { text = "MIT" }
@@ -20,8 +20,18 @@ classifiers = [
   "Topic :: Software Development :: Quality Assurance",
 ]
 
+[project.urls]
+Homepage = "https://github.com/alpalbayrak91-boop/proofgate"
+Repository = "https://github.com/alpalbayrak91-boop/proofgate"
+Issues = "https://github.com/alpalbayrak91-boop/proofgate/issues"
+LivePlayground = "https://proofgate-live-918888670706.us-central1.run.app"
+
 [project.scripts]
 proofgate = "proofgate.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["proofgate*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

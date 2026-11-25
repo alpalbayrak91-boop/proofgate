@@ -42,19 +42,33 @@ from .slsa_provenance import (
     dsse_verify_hmac_sha256,
     verify_slsa_provenance,
 )
+from .spec_diff_reward_hack_gate import (
+    CONCRETE_CORE_TYPES,
+    FORBIDDEN_ESCAPE_TOKENS,
+    PROTECTED_TYPECLASSES,
+    LeanDecl,
+    audit_spec_vs_candidate_submission,
+    parse_lean_declarations,
+    strip_lean_comments,
+)
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 __all__ = [
     "ASTGateResult",
+    "CONCRETE_CORE_TYPES",
+    "FORBIDDEN_ESCAPE_TOKENS",
+    "LeanDecl",
     "LeanDiffResult",
     "LeanGateResult",
     "MerkleTree",
+    "PROTECTED_TYPECLASSES",
     "PageCusumDetector",
     "SLSAVerificationResult",
     "SarifFinding",
     "__version__",
     "alpha_canonicalize_signature",
+    "audit_spec_vs_candidate_submission",
     "build_consistency_proof",
     "build_in_toto_slsa_statement",
     "canonical_json_bytes",
@@ -78,7 +92,9 @@ __all__ = [
     "lex_lean_source",
     "lexicographic_4gate_bps",
     "lexicographic_6tier_score",
+    "parse_lean_declarations",
     "span_to_utf16_region",
+    "strip_lean_comments",
     "strip_lean_comments_and_strings",
     "utf16_len",
     "utf16_offset_for_line_col",
