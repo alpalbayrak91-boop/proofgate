@@ -1,0 +1,23 @@
+{
+  "title": "ProofGate: Non-Compensatory Lexicographic Meta-Auditing, Lean 4 Specification-Faithfulness Gate, Python AST Verifier, and RFC 6962 Merkle Receipt Toolkit",
+  "upload_type": "software",
+  "description": "Zero-dependency MIT toolkit for deterministic verification across formal Lean 4 specifications, restricted Python verification scripts, reproducible .olean build isolation (22 formalized Lean 4 theorems, 0 sorry), and RFC 6962 / RFC 8785 cryptographic receipts.",
+  "creators": [
+    {
+      "name": "Albayrak, Alp",
+      "affiliation": "AlpLab Research"
+    }
+  ],
+  "keywords": [
+    "Lean 4",
+    "formal verification",
+    "multi-agent auditing",
+    "Python AST",
+    "RFC 6962",
+    "Merkle tree",
+    "reproducible builds"
+  ],
+  "license": "MIT",
+  "version": "0.2.0",
+  "access_right": "open"
+}

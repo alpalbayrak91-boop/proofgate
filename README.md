@@ -30,3 +30,9 @@ python3 -m proofgate.cli merkle-root record1.json record2.json
 - Zero external runtime dependencies (Python standard library only).
 - Interactive client-side RFC 6962 receipt & AST check playground in `docs/index.html` (Strict-CSP3 compatible, zero external CDNs).
 - License: MIT (Copyright 2026 Alp Albayrak).
+
+## Technical Paper & Formal Verification (`v0.2.0`)
+
+- **Empirical Technical Paper (`docs/PROOFGATE_PAPER.md`):** Documents the *Linear Compensation Paradox* across live multi-agent audit telemetry (`N=531` records, `N=1,546` continuous runs) and demonstrates how non-compensatory lexicographic gating lifts hard-defect catch rates to `100.00%` at `485k evaluations/sec`.
+- **Lean 4 Formal Soundness Proof (`formal/ProofGateV3ReproBuildIsolationSoundness.lean`):** 22 machine-checked theorems (`0 sorry`, standard Lean 4 kernel axioms only) proving `.olean`/`.ilean` reproducible build factor isolation, trace-blindness elimination, and fail-closed verification soundness.
+- **Citation & Archival:** Standard `CITATION.cff` and `.zenodo.json` metadata included for reproducible scholarly citation.
