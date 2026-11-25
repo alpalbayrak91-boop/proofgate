@@ -4,43 +4,286 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data:;">
-  <title>ProofGate — Lean 4 Faithfulness Gate &amp; RFC 6962 Receipt Verifier</title>
+  <title>ProofGate v0.2.0 — Lean 4 Faithfulness Gate, AST Safety &amp; RFC 6962 Verifier</title>
   <style>
-    :root { --bg: #0f172a; --card: #1e293b; --fg: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8; --ok: #22c55e; --bad: #ef4444; }
+    :root { --bg: #0b1120; --card: #111827; --border: #263248; --fg: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8; --ok: #22c55e; --bad: #ef4444; }
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--fg); line-height: 1.55; padding: 2rem 1rem; }
-    main { max-width: 880px; margin: 0 auto; }
-    h1, h2 { color: #f8fafc; margin-top: 0; }
-    .card { background: var(--card); border: 1px solid #334155; border-radius: 10px; padding: 1.25rem; margin-bottom: 1.25rem; }
-    textarea { width: 100%; min-height: 110px; background: #020617; color: #f8fafc; border: 1px solid #475569; border-radius: 6px; padding: 0.75rem; font-family: ui-monospace, monospace; font-size: 0.88rem; }
-    button { background: var(--accent); color: #020617; font-weight: 600; border: none; border-radius: 6px; padding: 0.55rem 1rem; cursor: pointer; margin-top: 0.6rem; }
-    .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.8rem; font-weight: 700; }
-    .ok { background: rgba(34,197,94,0.2); color: var(--ok); }
-    .bad { background: rgba(239,68,68,0.2); color: var(--bad); }
-    code { color: var(--accent); }
-    pre { background: #020617; padding: 0.75rem; border-radius: 6px; overflow-x: auto; font-size: 0.85rem; }
+    body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--fg); line-height: 1.55; padding: 2rem 1rem 4rem; }
+    main { max-width: 960px; margin: 0 auto; }
+    h1, h2, h3 { color: #f8fafc; margin-top: 0; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.35rem; margin-bottom: 1.25rem; }
+    .pills { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.65rem 0 0.85rem; }
+    .pill { background: #1e293b; border: 1px solid var(--border); color: #cbd5e1; padding: 0.25rem 0.7rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
+    .controls { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.7rem 0; }
+    textarea { width: 100%; min-height: 130px; background: #020617; color: #f8fafc; border: 1px solid #334155; border-radius: 8px; padding: 0.75rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.84rem; }
+    button { background: var(--accent); color: #020617; font-weight: 700; border: none; border-radius: 7px; padding: 0.5rem 0.9rem; cursor: pointer; font-size: 0.86rem; }
+    button.sec { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; font-weight: 600; }
+    button:hover { filter: brightness(1.08); }
+    .badge { display: inline-block; padding: 0.24rem 0.7rem; border-radius: 999px; font-size: 0.82rem; font-weight: 700; }
+    .ok { background: rgba(34,197,94,0.18); color: var(--ok); border: 1px solid rgba(34,197,94,0.4); }
+    .bad { background: rgba(239,68,68,0.18); color: var(--bad); border: 1px solid rgba(239,68,68,0.4); }
+    code { color: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    pre { background: #020617; border: 1px solid #1e293b; padding: 0.8rem; border-radius: 8px; overflow-x: auto; font-size: 0.82rem; color: #cbd5e1; }
+    .muted { color: var(--muted); font-size: 0.89rem; }
   </style>
 </head>
 <body>
   <main>
-    <div class="card">
-      <h1>ProofGate &amp; Muhur RFC 6962 Showcase</h1>
-      <p>MIT-licensed, zero-dependency verification toolkit combining Lean 4 specification-faithfulness checks, static Python AST gating, and browser-local WebCrypto RFC 6962 SHA-256 Merkle verification (zero backend, Strict-CSP3).</p>
-      <p><a href="https://github.com/alpalbayrak91-boop/proofgate" style="color:#38bdf8;">github.com/alpalbayrak91-boop/proofgate</a></p>
-    </div>
+    <section class="card">
+      <h1>ProofGate v0.2.0 &amp; Muhur RFC 6962 Showcase</h1>
+      <p class="muted">MIT-licensed, zero-dependency verification toolkit combining deterministic Lean 4 specification-faithfulness and kernel-hygiene checks, static Python AST gating, and browser-local WebCrypto RFC 6962 SHA-256 Merkle verification (Strict-CSP3, zero backend).</p>
+      <div class="pills">
+        <span class="pill">Release v0.2.0</span>
+        <span class="pill">22 Lean 4.35.0 Soundness Theorems (0 sorry)</span>
+        <span class="pill">Linear Compensation Paradox Paper (N=531 &amp; N=1,546)</span>
+        <span class="pill">485k checks/sec</span>
+        <span class="pill">Zenodo + CITATION.cff Ready</span>
+      </div>
+      <div class="controls">
+        <a href="https://github.com/alpalbayrak91-boop/proofgate" target="_blank" rel="noopener"><button type="button">GitHub Repository</button></a>
+        <a href="https://github.com/alpalbayrak91-boop/proofgate/releases/tag/v0.2.0" target="_blank" rel="noopener"><button type="button" class="sec">v0.2.0 Release</button></a>
+        <a href="https://github.com/alpalbayrak91-boop/proofgate/blob/main/docs/PROOFGATE_PAPER.md" target="_blank" rel="noopener"><button type="button" class="sec">Empirical Paper (404 lines)</button></a>
+        <a href="https://github.com/alpalbayrak91-boop/proofgate/blob/main/formal/ProofGateV3ReproBuildIsolationSoundness.lean" target="_blank" rel="noopener"><button type="button" class="sec">Lean 4 Proof (22 Theorems)</button></a>
+      </div>
+    </section>
 
-    <div class="card">
-      <h2>Browser-Local RFC 6962 Leaf &amp; Merkle Root Playground</h2>
-      <p>Each non-empty line below is treated as a deterministic receipt payload and hashed using <code>SHA-256(0x00 || leaf)</code> and <code>SHA-256(0x01 || left || right)</code>.</p>
-      <textarea id="leavesInput">{"event":"proof_checked","theorem":"add_comm_ok","status":"QED_ACCEPT"}
+    <section class="card">
+      <h2>1. Browser-Local Lean 4 Soundness &amp; Loophole Gate</h2>
+      <p class="muted">Mirrors <code>proofgate/lean_gate.py</code> locally in JS: strips nested block/line comments and string literals, then audits for <code>sorry</code>, <code>admit</code>, custom <code>axiom</code>, <code>native_decide</code>, <code>debug.skipKernelTC</code>, metaprogramming bypasses, missing <code>#print axioms</code>, free-variable <code>decide</code>, and trivial padding.</p>
+      <div class="controls">
+        <button type="button" id="leanCleanBtn">Preset: Clean Lean 4 Proof</button>
+        <button type="button" class="sec" id="leanTrapBtn">Preset: Zero-Sorry Bypass Trap</button>
+        <button type="button" class="sec" id="leanTrivialBtn">Preset: Missing #print axioms + Trivial</button>
+        <button type="button" id="checkLeanBtn">Audit Lean Source</button>
+      </div>
+      <textarea id="leanInput" spellcheck="false"></textarea>
+      <p id="leanStatus"></p>
+      <pre id="leanOut"></pre>
+    </section>
+
+    <section class="card">
+      <h2>2. Browser-Local Static Python Hygiene Gate</h2>
+      <p class="muted">Mirrors <code>proofgate/ast_gate.py</code> static rules without executing code: flags forbidden system imports (<code>os</code>, <code>subprocess</code>, <code>socket</code>, <code>pickle</code>), unsafe builtins (<code>eval</code>, <code>exec</code>, <code>open</code>, <code>__import__</code>), dunder escapes, unbounded loops, and oversized <code>range()</code> bounds.</p>
+      <div class="controls">
+        <button type="button" id="pySafeBtn">Preset: Safe Pure Math</button>
+        <button type="button" class="sec" id="pyUnsafeBtn">Preset: Sandbox Escape Attempt</button>
+        <button type="button" id="checkPyBtn">Audit Python Source</button>
+      </div>
+      <textarea id="pyInput" spellcheck="false"></textarea>
+      <p id="pyStatus"></p>
+      <pre id="pyOut"></pre>
+    </section>
+
+    <section class="card">
+      <h2>3. Browser-Local RFC 6962 Leaf &amp; Merkle Root Playground</h2>
+      <p class="muted">Each non-empty line below is treated as a deterministic receipt payload and hashed using <code>SHA-256(0x00 || leaf)</code> and <code>SHA-256(0x01 || left || right)</code>.</p>
+      <textarea id="leavesInput" spellcheck="false">{"event":"proof_checked","theorem":"add_comm_ok","status":"QED_ACCEPT"}
 {"event":"ast_checked","module":"pure_math","status":"AST_SAFE_ACCEPT"}
 {"event":"quota_guard","budget_usd":"0.00","overage_usd":"0.00"}</textarea>
-      <button id="computeBtn" type="button">Compute RFC 6962 Root</button>
+      <div class="controls">
+        <button id="computeBtn" type="button">Compute RFC 6962 Root</button>
+      </div>
       <p id="statusLine"></p>
       <pre id="rootOut">Press button to compute SHA-256 Merkle root locally in WebCrypto.</pre>
-    </div>
+    </section>
   </main>
+
   <script>
+    function stripLeanCommentsAndStrings(src) {
+      const n = src.length;
+      let i = 0;
+      let blockDepth = 0;
+      const withStrings = [];
+      const codeOnly = [];
+      while (i < n) {
+        const ch = src[i];
+        const nxt = i + 1 < n ? src[i + 1] : "";
+        if (blockDepth > 0) {
+          if (ch === "/" && nxt === "-") { blockDepth++; i += 2; continue; }
+          if (ch === "-" && nxt === "/") { blockDepth--; i += 2; continue; }
+          if (ch === "\n") { withStrings.push("\n"); codeOnly.push("\n"); }
+          i++;
+          continue;
+        }
+        if (ch === "/" && nxt === "-") { blockDepth = 1; i += 2; continue; }
+        if (ch === "-" && nxt === "-") {
+          while (i < n && src[i] !== "\n") i++;
+          continue;
+        }
+        if (ch === '"') {
+          let j = i + 1;
+          while (j < n) {
+            if (src[j] === "\\") { j += 2; continue; }
+            if (src[j] === '"') { j++; break; }
+            j++;
+          }
+          withStrings.push(src.slice(i, j));
+          codeOnly.push(' "" ');
+          i = j;
+          continue;
+        }
+        withStrings.push(ch);
+        codeOnly.push(ch);
+        i++;
+      }
+      return { withStrings: withStrings.join(""), codeOnly: codeOnly.join("") };
+    }
+
+    function checkLeanSource(src) {
+      const parsed = stripLeanCommentsAndStrings(src || "");
+      const ws = parsed.withStrings;
+      const code = parsed.codeOnly;
+      const violations = [];
+
+      if (/s!\s*"[^"]*\bsorry\b/.test(ws)) violations.push("REJECT_LEXER_INTERP_SORRY_EVASION");
+      if (/\bdebug\.skipKernelTC\b\s+true\b/.test(ws)) violations.push("REJECT_SKIP_KERNEL_TC");
+      if (/\bmkSorry\b/.test(code) || (/\belab\b/.test(code) && code.indexOf("Meta.mkSorry") >= 0)) {
+        violations.push("REJECT_METAPROG_MKSORRY_ELAB");
+      }
+      if (/\baddDecl\b/.test(code) && /\baxiomDecl\b/.test(code)) violations.push("REJECT_METAPROG_ADDDECL_AXIOM");
+      if (/\bnative_decide\b/.test(code)) violations.push("REJECT_NATIVE_DECIDE_OFREDUCEBOOL");
+      if (/(^|\n)\s*axiom\s+/.test(code)) violations.push("REJECT_NONSTANDARD_AXIOM");
+      if (/\badmit\b/.test(code)) violations.push("REJECT_LEAN_ADMIT");
+      if (/\bsorry\b/.test(code)) violations.push("REJECT_LEAN_SORRY");
+
+      const theoremRe = /(?:^|\n)\s*(?:private\s+|protected\s+)?(?:theorem|lemma)\s+([^\s:({\[<]+)([\s\S]*?):=\s*by\s+([^\n]*)/g;
+      const theorems = [];
+      let m;
+      while ((m = theoremRe.exec(code)) !== null) {
+        const sig = m[2] || "";
+        const tactic = (m[3] || "").trim().split(/\s+/)[0] || "";
+        const hasBinders = sig.indexOf("forall") >= 0 || sig.indexOf("\u2200") >= 0 || /[({\[]/.test(sig);
+        theorems.push({ name: m[1], hasBinders: hasBinders, tactic: tactic });
+      }
+
+      if (theorems.length > 0) {
+        if (code.indexOf("#print axioms") < 0) violations.push("REJECT_MISSING_PRINT_AXIOMS");
+        let closedTrivial = 0;
+        const trivialSet = { decide: 1, omega: 1, rfl: 1, trivial: 1 };
+        for (let i = 0; i < theorems.length; i++) {
+          if (theorems[i].hasBinders && theorems[i].tactic === "decide") {
+            violations.push("REJECT_FREE_VAR_DECIDE");
+          }
+          if (!theorems[i].hasBinders && trivialSet[theorems[i].tactic]) {
+            closedTrivial++;
+          }
+        }
+        if ((closedTrivial / theorems.length) > 0.50) {
+          violations.push("REJECT_TRIVIAL_ISPAT");
+        }
+      }
+
+      const unique = Array.from(new Set(violations)).sort();
+      return {
+        verdict: unique.length ? "REJECT" : "ACCEPT",
+        primary_code: unique.length ? unique[0] : "QED_ACCEPT",
+        violations: unique,
+        theorem_count: theorems.length
+      };
+    }
+
+    function checkPythonSource(src) {
+      const violations = [];
+      const forbiddenMods = ["os", "sys", "subprocess", "socket", "shutil", "pathlib", "ctypes", "importlib", "builtins", "pickle", "marshal"];
+      const forbiddenBuiltins = ["eval", "exec", "compile", "__import__", "open", "getattr", "setattr", "delattr", "globals", "locals", "vars"];
+      const lines = (src || "").split(/\r?\n/);
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].replace(/#.*/, "");
+        for (let j = 0; j < forbiddenMods.length; j++) {
+          const mod = forbiddenMods[j];
+          const re1 = new RegExp("\\bimport\\s+" + mod + "\\b");
+          const re2 = new RegExp("\\bfrom\\s+" + mod + "(?:\\.|\\s+)");
+          if (re1.test(line) || re2.test(line)) violations.push("REJECT_AST_FORBIDDEN_IMPORT");
+        }
+        for (let j = 0; j < forbiddenBuiltins.length; j++) {
+          const fn = forbiddenBuiltins[j];
+          const reFn = new RegExp("\\b" + fn + "\\s*\\(");
+          if (reFn.test(line)) violations.push("REJECT_AST_FORBIDDEN_BUILTIN");
+        }
+        if (/\.__[A-Za-z0-9_]+__\b/.test(line)) violations.push("REJECT_AST_DUNDER_ESCAPE");
+        const rangeMatch = line.match(/\brange\s*\(\s*(\d+)\s*\)/);
+        if (rangeMatch && Number(rangeMatch[1]) > 10000) {
+          violations.push("REJECT_AST_SAFE_RANGE_LIMIT_EXCEEDED");
+        }
+      }
+      if (/\bwhile\s+True\s*:/.test(src) && !/\bbreak\b/.test(src)) {
+        violations.push("REJECT_AST_UNBOUNDED_LOOP_DOS");
+      }
+      const unique = Array.from(new Set(violations)).sort();
+      return {
+        verdict: unique.length ? "REJECT" : "ACCEPT",
+        primary_code: unique.length ? unique[0] : "AST_SAFE_ACCEPT",
+        violations: unique
+      };
+    }
+
+    const LEAN_CLEAN = [
+      "-- Clean Lean 4 theorem with explicit #print axioms audit",
+      "theorem add_zero_right (n : Nat) : n + 0 = n := by",
+      "  induction n with",
+      "  | zero => rfl",
+      "  | succ k ih => simp [Nat.succ_add, ih]",
+      "",
+      "#print axioms add_zero_right"
+    ].join("\n");
+
+    const LEAN_TRAP = [
+      "-- Zero-sorry loophole attempt using custom axiom + native_decide",
+      "axiom fake_soundness : False",
+      "theorem bypassed_claim (n : Nat) : n = n + 1 := by",
+      "  native_decide",
+      "#print axioms bypassed_claim"
+    ].join("\n");
+
+    const LEAN_TRIVIAL = [
+      "-- Trivial closed propositions without #print axioms",
+      "theorem t1 : 1 + 1 = 2 := by rfl",
+      "theorem t2 : 2 + 2 = 4 := by decide"
+    ].join("\n");
+
+    const PY_SAFE = [
+      "import math",
+      "",
+      "def harmonic_bound(n: int) -> float:",
+      "    total = 0.0",
+      "    for k in range(1, min(n, 500) + 1):",
+      "        total += 1.0 / k",
+      "    return round(total, 6)"
+    ].join("\n");
+
+    const PY_UNSAFE = [
+      "import subprocess",
+      "",
+      "def spoof_verifier(x, y):",
+      "    payload = ().__class__.__bases__[0].__subclasses__()",
+      "    return eval('1 + 1')"
+    ].join("\n");
+
+    function runLeanCheck() {
+      const res = checkLeanSource(document.getElementById("leanInput").value);
+      const cls = res.verdict === "ACCEPT" ? "ok" : "bad";
+      document.getElementById("leanStatus").innerHTML = '<span class="badge ' + cls + '">' + res.verdict + " &middot; " + res.primary_code + "</span>";
+      document.getElementById("leanOut").textContent = JSON.stringify(res, null, 2);
+    }
+
+    function runPyCheck() {
+      const res = checkPythonSource(document.getElementById("pyInput").value);
+      const cls = res.verdict === "ACCEPT" ? "ok" : "bad";
+      document.getElementById("pyStatus").innerHTML = '<span class="badge ' + cls + '">' + res.verdict + " &middot; " + res.primary_code + "</span>";
+      document.getElementById("pyOut").textContent = JSON.stringify(res, null, 2);
+    }
+
+    document.getElementById("leanCleanBtn").addEventListener("click", () => { document.getElementById("leanInput").value = LEAN_CLEAN; runLeanCheck(); });
+    document.getElementById("leanTrapBtn").addEventListener("click", () => { document.getElementById("leanInput").value = LEAN_TRAP; runLeanCheck(); });
+    document.getElementById("leanTrivialBtn").addEventListener("click", () => { document.getElementById("leanInput").value = LEAN_TRIVIAL; runLeanCheck(); });
+    document.getElementById("checkLeanBtn").addEventListener("click", runLeanCheck);
+
+    document.getElementById("pySafeBtn").addEventListener("click", () => { document.getElementById("pyInput").value = PY_SAFE; runPyCheck(); });
+    document.getElementById("pyUnsafeBtn").addEventListener("click", () => { document.getElementById("pyInput").value = PY_UNSAFE; runPyCheck(); });
+    document.getElementById("checkPyBtn").addEventListener("click", runPyCheck);
+
     async function sha256Bytes(bytes) {
       const digest = await crypto.subtle.digest("SHA-256", bytes);
       return new Uint8Array(digest);
@@ -65,14 +308,21 @@
       const right = await mth(leaves.slice(k));
       return await sha256Bytes(concat(0x01, left, right));
     }
-    document.getElementById("computeBtn").addEventListener("click", async () => {
+    async function runMerkle() {
       const lines = document.getElementById("leavesInput").value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
       const enc = new TextEncoder();
       const leaves = lines.map(l => enc.encode(l));
       const root = await mth(leaves);
       document.getElementById("statusLine").innerHTML = '<span class="badge ok">RFC 6962 VERIFIED (' + leaves.length + ' leaves)</span>';
       document.getElementById("rootOut").textContent = "root_sha256=" + toHex(root);
-    });
+    }
+    document.getElementById("computeBtn").addEventListener("click", runMerkle);
+
+    document.getElementById("leanInput").value = LEAN_CLEAN;
+    document.getElementById("pyInput").value = PY_SAFE;
+    runLeanCheck();
+    runPyCheck();
+    runMerkle();
   </script>
 </body>
 </html>
