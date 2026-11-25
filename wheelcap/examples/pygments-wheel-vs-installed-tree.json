@@ -1,0 +1,1 @@
+{"after":{"source":"locally installed Python package directory (not a Git checkout)","version":"2.21.0"},"before":{"sha256":"c9faf9fbd24c86e8f6cc5b77ac1efe4536c4eb7a556f41e7f6d032b25bb9ef8f","source":"bundled wheel","version":"2.19.1"},"diff":{"added":[],"after_warnings":[],"before_warnings":[],"removed":[]}}
