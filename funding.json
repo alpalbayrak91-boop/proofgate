@@ -1,5 +1,4 @@
 {
-  "$schema": "https://fundingjson.org/schema/v1.1.0.json",
   "version": "v1.1.0",
   "entity": {
     "type": "individual",
@@ -16,7 +15,7 @@
     {
       "guid": "proofgate-muhur-oss",
       "name": "ProofGate & Muhur-Core",
-      "description": "Zero-dependency MIT Lean 4 faithfulness gate, Python AST verifier, and RFC 6962 / RFC 8785 cryptographic receipt toolkit.",
+      "description": "Zero-dependency MIT Lean 4 Omni-Gate, Python AST verifier, SARIF/SLSA/DSSE, and RFC 6962 / RFC 8785 cryptographic receipt toolkit.",
       "webpageUrl": {
         "url": "https://github.com/alpalbayrak91-boop/proofgate",
         "wellKnown": ""
@@ -26,7 +25,7 @@
         "wellKnown": ""
       },
       "licenses": ["spdx:MIT"],
-      "tags": ["formal-verification", "lean4", "static-analysis", "merkle-tree", "security"]
+      "tags": ["formal-verification", "lean4", "static-analysis", "merkle-tree", "slsa", "sarif", "security"]
     }
   ],
   "funding": {

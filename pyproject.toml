@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "proofgate"
-version = "0.2.0"
-description = "Zero-dependency Lean 4 specification-faithfulness gate, Python AST verifier, and RFC 6962 / RFC 8785 cryptographic receipt toolkit"
+version = "1.0.0"
+description = "Zero-dependency Omni-Gate verification toolkit: Lean 4 faithfulness/vacuity/diff gates, Python AST verifier, SARIF v2.1.0, RFC 6962/8785, SLSA v1.0 DSSE, and non-compensatory multi-agent evaluation"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Alp Albayrak" }]
 requires-python = ">=3.10"
-keywords = ["lean4", "formal-verification", "ast", "rfc6962", "merkle-tree", "jcs"]
+keywords = ["lean4", "formal-verification", "ast", "rfc6962", "merkle-tree", "jcs", "sarif", "slsa", "in-toto", "dsse", "agent-eval"]
 classifiers = [
-  "Development Status :: 4 - Beta",
+  "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: MIT License",

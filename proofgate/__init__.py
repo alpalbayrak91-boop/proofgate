@@ -1,27 +1,90 @@
-"""ProofGate: Lean 4 specification-faithfulness gate, Python AST verifier, and RFC 6962 Merkle receipt toolkit."""
+"""ProofGate v1.0.0 Omni-Gate: Lean 4 specification/diff gate, AST verifier, SARIF, SLSA/DSSE, RFC 6962, and multi-agent evaluator."""
 from __future__ import annotations
 
+from .agent_eval import (
+    PageCusumDetector,
+    evaluate_agent_run,
+    evaluate_fleet_runs,
+    export_junit_xml,
+    export_promptfoo_json,
+    lexicographic_4gate_bps,
+    lexicographic_6tier_score,
+    wilson_ci_bps,
+    wilson_lcb_bps,
+)
 from .ast_gate import ASTGateResult, check_python_source
-from .lean_gate import LeanGateResult, check_lean_source
+from .diff_gate import LeanDiffResult, alpha_canonicalize_signature, diff_lean_sources, extract_theorem_specs
+from .lean_gate import LeanGateResult, check_lean_source, lex_lean_source, strip_lean_comments_and_strings
 from .muhur_rfc6962 import (
     MerkleTree,
+    build_consistency_proof,
     canonical_json_bytes,
+    canonical_json_dumps,
     hash_leaf,
     hash_node,
+    verify_consistency_proof,
     verify_inclusion_proof,
 )
+from .sarif_export import (
+    SarifFinding,
+    compute_partial_fingerprints,
+    export_sarif,
+    findings_from_gate_result,
+    span_to_utf16_region,
+    utf16_len,
+    utf16_offset_for_line_col,
+)
+from .slsa_provenance import (
+    SLSAVerificationResult,
+    build_in_toto_slsa_statement,
+    dsse_pae,
+    dsse_sign_hmac_sha256,
+    dsse_verify_hmac_sha256,
+    verify_slsa_provenance,
+)
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 __all__ = [
     "ASTGateResult",
+    "LeanDiffResult",
     "LeanGateResult",
     "MerkleTree",
+    "PageCusumDetector",
+    "SLSAVerificationResult",
+    "SarifFinding",
     "__version__",
+    "alpha_canonicalize_signature",
+    "build_consistency_proof",
+    "build_in_toto_slsa_statement",
     "canonical_json_bytes",
+    "canonical_json_dumps",
     "check_lean_source",
     "check_python_source",
+    "compute_partial_fingerprints",
+    "diff_lean_sources",
+    "dsse_pae",
+    "dsse_sign_hmac_sha256",
+    "dsse_verify_hmac_sha256",
+    "evaluate_agent_run",
+    "evaluate_fleet_runs",
+    "export_junit_xml",
+    "export_promptfoo_json",
+    "export_sarif",
+    "extract_theorem_specs",
+    "findings_from_gate_result",
     "hash_leaf",
     "hash_node",
+    "lex_lean_source",
+    "lexicographic_4gate_bps",
+    "lexicographic_6tier_score",
+    "span_to_utf16_region",
+    "strip_lean_comments_and_strings",
+    "utf16_len",
+    "utf16_offset_for_line_col",
+    "verify_consistency_proof",
     "verify_inclusion_proof",
+    "verify_slsa_provenance",
+    "wilson_ci_bps",
+    "wilson_lcb_bps",
 ]

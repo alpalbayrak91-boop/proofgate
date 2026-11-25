@@ -1,11 +1,11 @@
 cff-version: 1.2.0
 message: "If you use ProofGate in academic research or formal verification pipelines, please cite it below."
-title: "ProofGate: Lean 4 Faithfulness Gate, Python AST Verifier, and RFC 6962 Merkle Receipt Toolkit"
+title: "ProofGate v1.0.0 Omni-Gate: Lean 4 Faithfulness & Diff Gate, Python AST Verifier, SARIF, SLSA v1.0 DSSE, RFC 6962, and Non-Compensatory Agent Evaluator"
 authors:
   - family-names: "Albayrak"
     given-names: "Alp"
 license: "MIT"
 repository-code: "https://github.com/alpalbayrak91-boop/proofgate"
 url: "https://alpalbayrak91-boop.github.io/proofgate/"
-version: "0.2.0"
+version: "1.0.0"
 date-released: "2026-11-25"

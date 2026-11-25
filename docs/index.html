@@ -1,328 +1,899 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data:;">
-  <title>ProofGate v0.2.0 — Lean 4 Faithfulness Gate, AST Safety &amp; RFC 6962 Verifier</title>
-  <style>
-    :root { --bg: #0b1120; --card: #111827; --border: #263248; --fg: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8; --ok: #22c55e; --bad: #ef4444; }
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--fg); line-height: 1.55; padding: 2rem 1rem 4rem; }
-    main { max-width: 960px; margin: 0 auto; }
-    h1, h2, h3 { color: #f8fafc; margin-top: 0; }
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.35rem; margin-bottom: 1.25rem; }
-    .pills { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.65rem 0 0.85rem; }
-    .pill { background: #1e293b; border: 1px solid var(--border); color: #cbd5e1; padding: 0.25rem 0.7rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
-    .controls { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.7rem 0; }
-    textarea { width: 100%; min-height: 130px; background: #020617; color: #f8fafc; border: 1px solid #334155; border-radius: 8px; padding: 0.75rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.84rem; }
-    button { background: var(--accent); color: #020617; font-weight: 700; border: none; border-radius: 7px; padding: 0.5rem 0.9rem; cursor: pointer; font-size: 0.86rem; }
-    button.sec { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; font-weight: 600; }
-    button:hover { filter: brightness(1.08); }
-    .badge { display: inline-block; padding: 0.24rem 0.7rem; border-radius: 999px; font-size: 0.82rem; font-weight: 700; }
-    .ok { background: rgba(34,197,94,0.18); color: var(--ok); border: 1px solid rgba(34,197,94,0.4); }
-    .bad { background: rgba(239,68,68,0.18); color: var(--bad); border: 1px solid rgba(239,68,68,0.4); }
-    code { color: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-    pre { background: #020617; border: 1px solid #1e293b; padding: 0.8rem; border-radius: 8px; overflow-x: auto; font-size: 0.82rem; color: #cbd5e1; }
-    .muted { color: var(--muted); font-size: 0.89rem; }
-  </style>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'; img-src 'self' data:; style-src 'sha256-+7af5Mf4LTUJ8BrIvfDIIZCM0Pg3x5jJ19vw9H+U2Sw='; script-src 'sha256-TQ8z07fdY4XfLZicVmerCe8/rXJ1ABhQfFH1FH6dTeY='">
+  <title>ProofGate v1.0 Omni-Gate — Interactive Verification Studio</title>
+  <style>:root{--bg:#090d16;--panel:#111827;--panel2:#0d1424;--line:#24324d;--ink:#eef4ff;--muted:#9aa9c4;--acc:#38bdf8;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--violet:#a78bfa}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.5;padding:24px 16px}
+.shell{max-width:1180px;margin:0 auto}
+.hero{background:linear-gradient(135deg,#111827 0%,#0f1c34 100%);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:16px}
+h1{margin:0 0 8px;font-size:1.55rem;letter-spacing:-0.01em}
+h2{margin:0 0 10px;font-size:1.08rem;color:var(--acc)}
+h3{margin:0 0 8px;font-size:.95rem;color:var(--ink)}
+.lead{color:var(--muted);font-size:.92rem;margin:0 0 12px}
+.badges{display:flex;flex-wrap:wrap;gap:8px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:700;border:1px solid #2b446e;background:#0b172c;color:var(--acc)}
+.badge.ok{border-color:#1c6b42;background:#0a2618;color:var(--ok)}
+.badge.bad{border-color:#8a1f2d;background:#290d14;color:var(--bad)}
+.badge.warn{border-color:#925709;background:#261805;color:var(--warn)}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.tab{background:#152036;color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:9px 14px;font-weight:700;font-size:.85rem;cursor:pointer}
+.tab.active{background:var(--acc);color:#061224;border-color:var(--acc)}
+.panel{display:none}
+.panel.active{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1.15fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:900px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+.kpi{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+.kpi .lbl{font-size:.73rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.kpi .val{font-size:1.12rem;font-weight:700;color:var(--acc);margin-top:2px}
+.kpi .val.ok{color:var(--ok)}
+.kpi .val.bad{color:var(--bad)}
+.kpi .val.warn{color:var(--warn)}
+label{display:block;font-size:.79rem;color:var(--muted);margin:8px 0 4px}
+textarea,input,select{width:100%;background:#070b14;color:var(--ink);border:1px solid #2b3c5e;border-radius:8px;padding:8px 10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.82rem}
+textarea{min-height:165px;resize:vertical}
+input[type=checkbox]{width:auto;margin-right:6px}
+.chk{display:flex;align-items:center;font-size:.84rem;color:var(--ink);margin:6px 0;cursor:pointer}
+.btnbar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+button{background:#1b2944;color:var(--ink);border:1px solid #324973;border-radius:8px;padding:7px 12px;font-weight:600;font-size:.82rem;cursor:pointer}
+button.pri{background:var(--acc);color:#061224;border-color:var(--acc)}
+button.good{background:var(--ok);color:#041a0d;border-color:var(--ok)}
+button.danger{background:var(--bad);color:#1f0507;border-color:var(--bad)}
+.banner{padding:10px 12px;border-radius:9px;border:1px solid #1e5c45;background:#0a1d17;color:#86efac;font-size:.84rem;font-weight:600;margin:8px 0}
+.banner.bad{border-color:#991b1b;background:#280d14;color:#fca5a5}
+.banner.warn{border-color:#b45309;background:#261a08;color:#fde68a}
+pre{background:#060a12;border:1px solid var(--line);border-radius:8px;padding:10px;overflow:auto;font-size:.77rem;max-height:280px;margin:8px 0 0;color:#dbeafe}
+table{width:100%;border-collapse:collapse;font-size:.81rem;margin-top:8px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:700;background:#0b1220}
+svg.viz{width:100%;height:auto;background:#060a12;border:1px solid var(--line);border-radius:9px;display:block;margin-top:10px}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.foot{color:var(--muted);font-size:.78rem;margin-top:16px;text-align:center}</style>
 </head>
 <body>
-  <main>
-    <section class="card">
-      <h1>ProofGate v0.2.0 &amp; Muhur RFC 6962 Showcase</h1>
-      <p class="muted">MIT-licensed, zero-dependency verification toolkit combining deterministic Lean 4 specification-faithfulness and kernel-hygiene checks, static Python AST gating, and browser-local WebCrypto RFC 6962 SHA-256 Merkle verification (Strict-CSP3, zero backend).</p>
-      <div class="pills">
-        <span class="pill">Release v0.2.0</span>
-        <span class="pill">22 Lean 4.35.0 Soundness Theorems (0 sorry)</span>
-        <span class="pill">Linear Compensation Paradox Paper (N=531 &amp; N=1,546)</span>
-        <span class="pill">485k checks/sec</span>
-        <span class="pill">Zenodo + CITATION.cff Ready</span>
-      </div>
-      <div class="controls">
-        <a href="https://github.com/alpalbayrak91-boop/proofgate" target="_blank" rel="noopener"><button type="button">GitHub Repository</button></a>
-        <a href="https://github.com/alpalbayrak91-boop/proofgate/releases/tag/v0.2.0" target="_blank" rel="noopener"><button type="button" class="sec">v0.2.0 Release</button></a>
-        <a href="https://github.com/alpalbayrak91-boop/proofgate/blob/main/docs/PROOFGATE_PAPER.md" target="_blank" rel="noopener"><button type="button" class="sec">Empirical Paper (404 lines)</button></a>
-        <a href="https://github.com/alpalbayrak91-boop/proofgate/blob/main/formal/ProofGateV3ReproBuildIsolationSoundness.lean" target="_blank" rel="noopener"><button type="button" class="sec">Lean 4 Proof (22 Theorems)</button></a>
-      </div>
-    </section>
+<div class="shell">
+  <section class="hero">
+    <h1>ProofGate v1.0 Omni-Gate — Interactive Verification Studio</h1>
+    <p class="lead">Zero-dependency deterministic verification combining Lean 4 faithfulness/vacuity/PR-diff gating, static Python AST sandboxing, RFC 8785 JCS + RFC 6962 inclusion &amp; consistency proofs, SLSA Provenance v1.0 DSSEv1 attestations, SARIF v2.1.0 export, and non-compensatory multi-agent evaluation.</p>
+    <div class="badges">
+      <span class="badge ok">Pure Python Stdlib + Init Lean 4</span>
+      <span class="badge">Hash-Pinned Strict-CSP3 (0 inline-bypass)</span>
+      <span class="badge">0 External CDNs / 0 Network Calls</span>
+      <span class="badge ok">16 Lean 4 Soundness Theorems (0 incomplete proofs)</span>
+    </div>
+  </section>
 
-    <section class="card">
-      <h2>1. Browser-Local Lean 4 Soundness &amp; Loophole Gate</h2>
-      <p class="muted">Mirrors <code>proofgate/lean_gate.py</code> locally in JS: strips nested block/line comments and string literals, then audits for <code>sorry</code>, <code>admit</code>, custom <code>axiom</code>, <code>native_decide</code>, <code>debug.skipKernelTC</code>, metaprogramming bypasses, missing <code>#print axioms</code>, free-variable <code>decide</code>, and trivial padding.</p>
-      <div class="controls">
-        <button type="button" id="leanCleanBtn">Preset: Clean Lean 4 Proof</button>
-        <button type="button" class="sec" id="leanTrapBtn">Preset: Zero-Sorry Bypass Trap</button>
-        <button type="button" class="sec" id="leanTrivialBtn">Preset: Missing #print axioms + Trivial</button>
-        <button type="button" id="checkLeanBtn">Audit Lean Source</button>
-      </div>
-      <textarea id="leanInput" spellcheck="false"></textarea>
-      <p id="leanStatus"></p>
-      <pre id="leanOut"></pre>
-    </section>
+  <nav class="tabs" aria-label="Verification Studio Modules">
+    <button class="tab active" type="button" data-panel="panelLean">1. Lean 4 Gate &amp; Vacuity</button>
+    <button class="tab" type="button" data-panel="panelAst">2. Python AST Gate</button>
+    <button class="tab" type="button" data-panel="panelCrypto">3. RFC 6962 + SLSA v1.0 DSSE</button>
+    <button class="tab" type="button" data-panel="panelEval">4. Lexicographic vs Linear Eval</button>
+    <button class="tab" type="button" data-panel="panelMatrix">5. Competitor Matrix</button>
+  </nav>
 
-    <section class="card">
-      <h2>2. Browser-Local Static Python Hygiene Gate</h2>
-      <p class="muted">Mirrors <code>proofgate/ast_gate.py</code> static rules without executing code: flags forbidden system imports (<code>os</code>, <code>subprocess</code>, <code>socket</code>, <code>pickle</code>), unsafe builtins (<code>eval</code>, <code>exec</code>, <code>open</code>, <code>__import__</code>), dunder escapes, unbounded loops, and oversized <code>range()</code> bounds.</p>
-      <div class="controls">
-        <button type="button" id="pySafeBtn">Preset: Safe Pure Math</button>
-        <button type="button" class="sec" id="pyUnsafeBtn">Preset: Sandbox Escape Attempt</button>
-        <button type="button" id="checkPyBtn">Audit Python Source</button>
+  <section id="panelLean" class="panel active">
+    <div class="card">
+      <h2>Lean 4 Specification-Faithfulness, Lexer &amp; Vacuity Checker</h2>
+      <div id="leanBanner" class="banner">Ready.</div>
+      <div class="grid3">
+        <div class="kpi"><div class="lbl">Verdict</div><div id="leanKpiVerdict" class="val ok">ACCEPT</div></div>
+        <div class="kpi"><div class="lbl">Theorems</div><div id="leanKpiThms" class="val">1</div></div>
+        <div class="kpi"><div class="lbl">#print axioms Coverage</div><div id="leanKpiCov" class="val">10000 bps</div></div>
       </div>
-      <textarea id="pyInput" spellcheck="false"></textarea>
-      <p id="pyStatus"></p>
-      <pre id="pyOut"></pre>
-    </section>
-
-    <section class="card">
-      <h2>3. Browser-Local RFC 6962 Leaf &amp; Merkle Root Playground</h2>
-      <p class="muted">Each non-empty line below is treated as a deterministic receipt payload and hashed using <code>SHA-256(0x00 || leaf)</code> and <code>SHA-256(0x01 || left || right)</code>.</p>
-      <textarea id="leavesInput" spellcheck="false">{"event":"proof_checked","theorem":"add_comm_ok","status":"QED_ACCEPT"}
-{"event":"ast_checked","module":"pure_math","status":"AST_SAFE_ACCEPT"}
-{"event":"quota_guard","budget_usd":"0.00","overage_usd":"0.00"}</textarea>
-      <div class="controls">
-        <button id="computeBtn" type="button">Compute RFC 6962 Root</button>
+      <div class="btnbar">
+        <button id="btnLeanCheck" class="pri" type="button">Run Lean Gate</button>
+        <button id="preLeanClean" type="button">Preset: Clean Proof</button>
+        <button id="preLeanInterp" type="button">Preset: s!"..." Sorry Evasion</button>
+        <button id="preLeanVac" type="button">Preset: Vacuous (x &lt; 0, x &gt; 5)</button>
+        <button id="preLeanKernel" type="button">Preset: skipKernelTC + Axiom</button>
       </div>
-      <p id="statusLine"></p>
-      <pre id="rootOut">Press button to compute SHA-256 Merkle root locally in WebCrypto.</pre>
-    </section>
-  </main>
+      <label class="chk"><input id="leanStrict" type="checkbox" checked> Strict mode (require <code>set_option autoImplicit false</code> + 10000 bps <code>#print axioms</code> coverage)</label>
+      <textarea id="leanSrc" aria-label="Lean 4 source">set_option autoImplicit false
 
-  <script>
-    function stripLeanCommentsAndStrings(src) {
-      const n = src.length;
-      let i = 0;
-      let blockDepth = 0;
-      const withStrings = [];
-      const codeOnly = [];
-      while (i < n) {
-        const ch = src[i];
-        const nxt = i + 1 < n ? src[i + 1] : "";
-        if (blockDepth > 0) {
-          if (ch === "/" && nxt === "-") { blockDepth++; i += 2; continue; }
-          if (ch === "-" && nxt === "/") { blockDepth--; i += 2; continue; }
-          if (ch === "\n") { withStrings.push("\n"); codeOnly.push("\n"); }
-          i++;
+/-- Safe comment: sorry is ignored inside comments -/
+theorem add_pos_ok (a b : Nat) (ha : 0 &lt; a) : 0 &lt; a + b := by
+  omega
+
+#print axioms add_pos_ok</textarea>
+      <table>
+        <thead><tr><th>SARIF Rule</th><th>Code</th><th>UTF-16 Location</th><th>Diagnostic</th></tr></thead>
+        <tbody id="leanTable"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="panelAst" class="panel">
+    <div class="card">
+      <h2>Python AST Safety &amp; Constant-Oracle Verifier</h2>
+      <div id="astBanner" class="banner">Ready.</div>
+      <div class="btnbar">
+        <button id="btnAstCheck" class="pri" type="button">Run AST Gate</button>
+        <button id="preAstPure" type="button">Preset: Pure Math</button>
+        <button id="preAstEval" type="button">Preset: Aliased Import + eval()</button>
+        <button id="preAstDos" type="button">Preset: Dunder Escape + DoS Loop</button>
+      </div>
+      <textarea id="astSrc" aria-label="Python source">def bounded_sum(xs):
+    total = 0
+    for x in xs:
+        total += x * x
+    return total</textarea>
+      <table>
+        <thead><tr><th>SARIF Rule</th><th>Code</th><th>Location</th><th>Diagnostic</th></tr></thead>
+        <tbody id="astTable"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="panelCrypto" class="panel">
+    <div class="card">
+      <h2>WebCrypto RFC 8785 JCS, RFC 6962 Inclusion + Consistency &amp; SLSA v1.0 DSSE Builder</h2>
+      <div id="merkleBanner" class="banner">Ready.</div>
+      <div class="grid2">
+        <div>
+          <label for="merkleLeaves">Receipt Payloads (1 JSON/text record per line; JCS canonicalized)</label>
+          <textarea id="merkleLeaves">{"event":"lean_checked","status":"QED_ACCEPT","cost_usd":"0.00"}
+{"event":"ast_checked","status":"AST_SAFE_ACCEPT","cost_usd":"0.00"}
+{"event":"diff_checked","status":"DIFF_EQUIV_ACCEPT","renamed":1}
+{"event":"eval_fleet","wilson_lcb_bps":8120,"cusum_quarantined":false}</textarea>
+          <div class="grid3">
+            <div><label for="leafIdx">Inclusion Leaf Index</label><input id="leafIdx" type="number" min="0" value="1"></div>
+            <div><label for="oldSize">Consistency Old Size m</label><input id="oldSize" type="number" min="1" value="2"></div>
+            <div><label for="hmacSecret">DSSE HMAC Secret (Local)</label><input id="hmacSecret" type="text" value="proofgate-studio-demo-key"></div>
+          </div>
+          <div class="btnbar">
+            <button id="btnBuildMerkle" class="pri" type="button">Compute &amp; Sign SLSA DSSE</button>
+            <button id="btnTamperSlsa" class="danger" type="button">Test Tampered Subject (Fail-Closed)</button>
+          </div>
+        </div>
+        <div>
+          <label for="merkleOut">RFC 6962 Proofs + DSSEv1 PAE HMAC-SHA256 Envelope</label>
+          <pre id="merkleOut">Click Compute to generate inclusion, consistency, and SLSA DSSE proofs.</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="panelEval" class="panel">
+    <div class="card">
+      <h2>Lexicographic 4-Gate / 6-Tier vs Linear Additive Eval Simulator</h2>
+      <div id="evalBanner" class="banner">Ready.</div>
+      <div class="grid2">
+        <div>
+          <label class="chk"><input id="simP0Miss" type="checkbox" checked> Inject P0 Defect: Missing Artifact (EKSIK_DOSYA)</label>
+          <label class="chk"><input id="simP0Triv" type="checkbox"> Inject P0 Defect: Trivial Proof (TRIVIAL_ISPAT)</label>
+          <label class="chk"><input id="simGitSha" type="checkbox" checked> Provenance Bound (git_sha_present = true)</label>
+          <label class="chk"><input id="simDiffFam" type="checkbox" checked> Cross-Family Referee (referee_distinct_family = true)</label>
+          <label class="chk"><input id="simRefOk" type="checkbox" checked> Referee Approved (referee_approved = true)</label>
+          <div class="grid3">
+            <div><label for="simQuality">Quality (0..10000 bps)</label><input id="simQuality" type="number" min="0" max="10000" value="10000"></div>
+            <div><label for="simSucc">Cohort Passes</label><input id="simSucc" type="number" min="0" value="18"></div>
+            <div><label for="simTot">Cohort Total</label><input id="simTot" type="number" min="1" value="20"></div>
+          </div>
+        </div>
+        <div>
+          <div class="grid2">
+            <div class="kpi"><div class="lbl">Legacy Linear Baseline</div><div id="simOutLinear" class="val warn">85 / 100</div></div>
+            <div class="kpi"><div class="lbl">ProofGate 4-Gate</div><div id="simOut4g" class="val bad">-25000 bps</div></div>
+            <div class="kpi"><div class="lbl">ProofGate 6-Tier</div><div id="simOut6t" class="val bad">0</div></div>
+            <div class="kpi"><div class="lbl">Wilson LCB / CUSUM</div><div id="simOutWilson" class="val">0 bps</div></div>
+          </div>
+          <svg id="evalSvg" class="viz" viewBox="0 0 680 190" role="img" aria-label="Page-CUSUM drift trajectory chart"></svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="panelMatrix" class="panel">
+    <div class="card">
+      <h2>Omni-Gate v1.0.0 Architecture &amp; Competitor Comparison Matrix</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Capability</th>
+            <th>ProofGate v1.0 Omni-Gate</th>
+            <th>Semgrep / CodeQL</th>
+            <th>Sigstore / in-toto / SLSA</th>
+            <th>lean4checker / SafeVerify</th>
+            <th>Inspect AI / Promptfoo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Zero External Runtime Deps</td><td>Yes (Python stdlib + Pure-Init Lean 4)</td><td>No (OCaml / DB engine)</td><td>No (Fulcio / Rekor / Go)</td><td>Lean toolchain only</td><td>No (Node / Python stack)</td></tr>
+          <tr><td>Lean 4 Lexer + Vacuity + PR Diff</td><td>Yes (nested comments, s!&quot;...&quot;, alpha-diff, bounds)</td><td>No</td><td>No</td><td>Kernel / .olean check only</td><td>No</td></tr>
+          <tr><td>Python AST Static Sandbox</td><td>Yes (whitelisted AST + DoS/oracle checks)</td><td>Yes (generic SAST rules)</td><td>No</td><td>No</td><td>No</td></tr>
+          <tr><td>SARIF v2.1.0 UTF-16 Export</td><td>Yes (GitHub / VS Code + SHA-256 fingerprints)</td><td>Yes</td><td>No</td><td>No</td><td>No</td></tr>
+          <tr><td>RFC 8785 JCS + RFC 6962 Inclusion &amp; Consistency</td><td>Yes (-0 to 0, audit + consistency(m,n))</td><td>No</td><td>Rekor inclusion/consistency</td><td>No</td><td>No</td></tr>
+          <tr><td>in-toto SLSA v1.0 + DSSEv1 PAE</td><td>Yes (HMAC-SHA256 PAE envelope)</td><td>No</td><td>Yes (OIDC / Cosign)</td><td>No</td><td>No</td></tr>
+          <tr><td>Non-Compensatory Lexicographic Eval + Wilson + CUSUM</td><td>Yes (4-gate + 6-tier + JUnit + Promptfoo)</td><td>No</td><td>No</td><td>No</td><td>Linear / threshold scoring</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="foot">ProofGate v1.0.0 Omni-Gate · MIT License · GitHub Repository: alpalbayrak91-boop/proofgate · Local Execution Cost: 0.00 USD</p>
+</div>
+<script>(function () {
+  var enc = new TextEncoder();
+
+  function byId(id) { return document.getElementById(id); }
+
+  function setActiveTab(tabId) {
+    var tabs = document.querySelectorAll(".tab");
+    var panels = document.querySelectorAll(".panel");
+    for (var i = 0; i < tabs.length; i++) {
+      var t = tabs[i];
+      if (t.getAttribute("data-panel") === tabId) {
+        t.classList.add("active");
+      } else {
+        t.classList.remove("active");
+      }
+    }
+    for (var j = 0; j < panels.length; j++) {
+      var p = panels[j];
+      if (p.id === tabId) {
+        p.classList.add("active");
+      } else {
+        p.classList.remove("active");
+      }
+    }
+  }
+
+  var tabBtns = document.querySelectorAll(".tab");
+  for (var tb = 0; tb < tabBtns.length; tb++) {
+    tabBtns[tb].addEventListener("click", function (ev) {
+      setActiveTab(ev.currentTarget.getAttribute("data-panel"));
+    });
+  }
+
+  function utf16Len(str) {
+    return str.length;
+  }
+
+  function spanToUtf16(src, idx) {
+    var prefix = src.slice(0, Math.max(0, idx));
+    var lines = prefix.split("\n");
+    var line = lines.length;
+    var col = lines[lines.length - 1].length + 1;
+    return { line: line, col: col, char_utf16: utf16Len(prefix) };
+  }
+
+  function clearEl(el) {
+    while (el.firstChild) el.removeChild(el.firstChild);
+  }
+
+  function renderRows(tbody, rows) {
+    clearEl(tbody);
+    for (var i = 0; i < rows.length; i++) {
+      var tr = document.createElement("tr");
+      for (var c = 0; c < rows[i].length; c++) {
+        var td = document.createElement("td");
+        td.textContent = String(rows[i][c]);
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    }
+  }
+
+  // =========================================================================
+  // 1. Lean 4 Gate + Vacuity Studio
+  // =========================================================================
+  var LEAN_PRESETS = {
+    clean: "set_option autoImplicit false\n\n/-- Safe comment: sorry is ignored inside comments -/\ntheorem add_pos_ok (a b : Nat) (ha : 0 < a) : 0 < a + b := by\n  omega\n\n#print axioms add_pos_ok",
+    interp: "set_option autoImplicit false\ndef msg : String := s! /- bypass -/ \"{(by sorry : Nat)}\"\ntheorem fake_ok (n : Nat) : n = n := rfl\n#print axioms fake_ok",
+    vacuous: "set_option autoImplicit false\ntheorem impossible_claim (x : Int) (h1 : x < 0) (h2 : x > 5) : 1 = 2 := by\n  omega\n\n#print axioms impossible_claim",
+    kernel: "set_option debug.skipKernelTC true\ndef a : Nat := 0 axiom bogus : False\ntheorem anything : 1 = 2 := False.elim bogus"
+  };
+
+  function scrubLean(src) {
+    var n = src.length;
+    var i = 0;
+    var bd = 0;
+    var frames = [];
+    var wsOut = [];
+    var codeOut = [];
+    while (i < n) {
+      var c = src[i];
+      var nxt = i + 1 < n ? src[i + 1] : "";
+      if (bd > 0) {
+        if (c === "/" && nxt === "-") { bd++; wsOut.push("  "); codeOut.push("  "); i += 2; continue; }
+        if (c === "-" && nxt === "/") { bd--; wsOut.push("  "); codeOut.push("  "); i += 2; continue; }
+        var nl = c === "\n" ? "\n" : " ";
+        wsOut.push(nl); codeOut.push(nl); i++; continue;
+      }
+      if (frames.length > 0 && frames[frames.length - 1][0]) {
+        if (c === "\\" && i + 1 < n) {
+          var ec = src[i + 1] === "\n" ? "\n" : " ";
+          wsOut.push(src.slice(i, i + 2)); codeOut.push(" " + ec); i += 2; continue;
+        }
+        if (c === "{" && nxt === "{") { wsOut.push("{{"); codeOut.push("  "); i += 2; continue; }
+        if (c === "{") { frames[frames.length - 1][0] = false; frames[frames.length - 1][1] = 1; wsOut.push("{"); codeOut.push("{"); i++; continue; }
+        if (c === "\"") { frames.pop(); wsOut.push("\""); codeOut.push("\""); i++; continue; }
+        wsOut.push(c); codeOut.push(c === "\n" ? "\n" : " "); i++; continue;
+      }
+      if (c === "/" && nxt === "-") { bd = 1; wsOut.push("  "); codeOut.push("  "); i += 2; continue; }
+      if (c === "-" && nxt === "-") {
+        while (i < n && src[i] !== "\n") { wsOut.push(" "); codeOut.push(" "); i++; }
+        continue;
+      }
+      if (c === "s" && nxt === "!") {
+        var k = i + 2;
+        var pad = "";
+        while (k < n && (src[k] === " " || src[k] === "\t")) { pad += " "; k++; }
+        if (k < n && src[k] === "\"") {
+          wsOut.push("s!" + pad + "\"");
+          codeOut.push("  " + pad + " ");
+          frames.push([true, 0]);
+          i = k + 1;
           continue;
         }
-        if (ch === "/" && nxt === "-") { blockDepth = 1; i += 2; continue; }
-        if (ch === "-" && nxt === "-") {
-          while (i < n && src[i] !== "\n") i++;
-          continue;
-        }
-        if (ch === '"') {
-          let j = i + 1;
-          while (j < n) {
-            if (src[j] === "\\") { j += 2; continue; }
-            if (src[j] === '"') { j++; break; }
-            j++;
-          }
-          withStrings.push(src.slice(i, j));
-          codeOnly.push(' "" ');
-          i = j;
-          continue;
-        }
-        withStrings.push(ch);
-        codeOnly.push(ch);
-        i++;
       }
-      return { withStrings: withStrings.join(""), codeOnly: codeOnly.join("") };
-    }
-
-    function checkLeanSource(src) {
-      const parsed = stripLeanCommentsAndStrings(src || "");
-      const ws = parsed.withStrings;
-      const code = parsed.codeOnly;
-      const violations = [];
-
-      if (/s!\s*"[^"]*\bsorry\b/.test(ws)) violations.push("REJECT_LEXER_INTERP_SORRY_EVASION");
-      if (/\bdebug\.skipKernelTC\b\s+true\b/.test(ws)) violations.push("REJECT_SKIP_KERNEL_TC");
-      if (/\bmkSorry\b/.test(code) || (/\belab\b/.test(code) && code.indexOf("Meta.mkSorry") >= 0)) {
-        violations.push("REJECT_METAPROG_MKSORRY_ELAB");
-      }
-      if (/\baddDecl\b/.test(code) && /\baxiomDecl\b/.test(code)) violations.push("REJECT_METAPROG_ADDDECL_AXIOM");
-      if (/\bnative_decide\b/.test(code)) violations.push("REJECT_NATIVE_DECIDE_OFREDUCEBOOL");
-      if (/(^|\n)\s*axiom\s+/.test(code)) violations.push("REJECT_NONSTANDARD_AXIOM");
-      if (/\badmit\b/.test(code)) violations.push("REJECT_LEAN_ADMIT");
-      if (/\bsorry\b/.test(code)) violations.push("REJECT_LEAN_SORRY");
-
-      const theoremRe = /(?:^|\n)\s*(?:private\s+|protected\s+)?(?:theorem|lemma)\s+([^\s:({\[<]+)([\s\S]*?):=\s*by\s+([^\n]*)/g;
-      const theorems = [];
-      let m;
-      while ((m = theoremRe.exec(code)) !== null) {
-        const sig = m[2] || "";
-        const tactic = (m[3] || "").trim().split(/\s+/)[0] || "";
-        const hasBinders = sig.indexOf("forall") >= 0 || sig.indexOf("\u2200") >= 0 || /[({\[]/.test(sig);
-        theorems.push({ name: m[1], hasBinders: hasBinders, tactic: tactic });
-      }
-
-      if (theorems.length > 0) {
-        if (code.indexOf("#print axioms") < 0) violations.push("REJECT_MISSING_PRINT_AXIOMS");
-        let closedTrivial = 0;
-        const trivialSet = { decide: 1, omega: 1, rfl: 1, trivial: 1 };
-        for (let i = 0; i < theorems.length; i++) {
-          if (theorems[i].hasBinders && theorems[i].tactic === "decide") {
-            violations.push("REJECT_FREE_VAR_DECIDE");
-          }
-          if (!theorems[i].hasBinders && trivialSet[theorems[i].tactic]) {
-            closedTrivial++;
-          }
+      if (c === "\"") {
+        var j = i + 1;
+        while (j < n) {
+          if (src[j] === "\\" && j + 1 < n) { j += 2; continue; }
+          if (src[j] === "\"") { j++; break; }
+          j++;
         }
-        if ((closedTrivial / theorems.length) > 0.50) {
-          violations.push("REJECT_TRIVIAL_ISPAT");
+        var lit = src.slice(i, j);
+        wsOut.push(lit);
+        codeOut.push("\"" + " ".repeat(Math.max(0, lit.length - 2)) + "\"");
+        i = j;
+        continue;
+      }
+      if (frames.length > 0) {
+        if (c === "{") { frames[frames.length - 1][1]++; }
+        else if (c === "}") {
+          frames[frames.length - 1][1]--;
+          if (frames[frames.length - 1][1] === 0) frames[frames.length - 1][0] = true;
         }
       }
-
-      const unique = Array.from(new Set(violations)).sort();
-      return {
-        verdict: unique.length ? "REJECT" : "ACCEPT",
-        primary_code: unique.length ? unique[0] : "QED_ACCEPT",
-        violations: unique,
-        theorem_count: theorems.length
-      };
+      wsOut.push(c);
+      codeOut.push(c);
+      i++;
     }
+    return { withStrings: wsOut.join(""), codeOnly: codeOut.join("") };
+  }
 
-    function checkPythonSource(src) {
-      const violations = [];
-      const forbiddenMods = ["os", "sys", "subprocess", "socket", "shutil", "pathlib", "ctypes", "importlib", "builtins", "pickle", "marshal"];
-      const forbiddenBuiltins = ["eval", "exec", "compile", "__import__", "open", "getattr", "setattr", "delattr", "globals", "locals", "vars"];
-      const lines = (src || "").split(/\r?\n/);
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].replace(/#.*/, "");
-        for (let j = 0; j < forbiddenMods.length; j++) {
-          const mod = forbiddenMods[j];
-          const re1 = new RegExp("\\bimport\\s+" + mod + "\\b");
-          const re2 = new RegExp("\\bfrom\\s+" + mod + "(?:\\.|\\s+)");
-          if (re1.test(line) || re2.test(line)) violations.push("REJECT_AST_FORBIDDEN_IMPORT");
-        }
-        for (let j = 0; j < forbiddenBuiltins.length; j++) {
-          const fn = forbiddenBuiltins[j];
-          const reFn = new RegExp("\\b" + fn + "\\s*\\(");
-          if (reFn.test(line)) violations.push("REJECT_AST_FORBIDDEN_BUILTIN");
-        }
-        if (/\.__[A-Za-z0-9_]+__\b/.test(line)) violations.push("REJECT_AST_DUNDER_ESCAPE");
-        const rangeMatch = line.match(/\brange\s*\(\s*(\d+)\s*\)/);
-        if (rangeMatch && Number(rangeMatch[1]) > 10000) {
-          violations.push("REJECT_AST_SAFE_RANGE_LIMIT_EXCEEDED");
+  function checkVacuityInSignature(sig) {
+    var bounds = {};
+    function ensure(v) {
+      if (!bounds[v]) bounds[v] = { low: null, high: null };
+      return bounds[v];
+    }
+    function setLow(v, val, strict) {
+      var b = ensure(v);
+      if (!b.low || val > b.low.val || (val === b.low.val && strict && !b.low.strict)) b.low = { val: val, strict: strict };
+    }
+    function setHigh(v, val, strict) {
+      var b = ensure(v);
+      if (!b.high || val < b.high.val || (val === b.high.val && strict && !b.high.strict)) b.high = { val: val, strict: strict };
+    }
+    var reNat = /\(([A-Za-z_][A-Za-z0-9_']*)\s*:\s*Nat\)/g;
+    var mn;
+    while ((mn = reNat.exec(sig)) !== null) setLow(mn[1], 0, false);
+
+    var reBinder = /\([^:()]+:\s*([^()]+)\)/g;
+    var mb;
+    while ((mb = reBinder.exec(sig)) !== null) {
+      var prop = mb[1].trim();
+      if (prop === "False") return "Direct False hypothesis";
+      if (prop.indexOf("∨") !== -1) continue;
+      var m1 = /^([A-Za-z_][A-Za-z0-9_']*)\s*(<=|>=|<|>|≤|≥)\s*(-?\d+)/.exec(prop);
+      if (m1 && m1[0].length === prop.length) {
+        var v = m1[1], op = m1[2], num = parseInt(m1[3], 10);
+        if (op === "<") setHigh(v, num, true);
+        else if (op === "<=" || op === "≤") setHigh(v, num, false);
+        else if (op === ">") setLow(v, num, true);
+        else if (op === ">=" || op === "≥") setLow(v, num, false);
+      }
+    }
+    var keys = Object.keys(bounds);
+    for (var i = 0; i < keys.length; i++) {
+      var b = bounds[keys[i]];
+      if (b.low && b.high) {
+        if (b.low.val > b.high.val || (b.low.val === b.high.val && (b.low.strict || b.high.strict))) {
+          return "Contradictory bounds on '" + keys[i] + "' (low=" + b.low.val + ", high=" + b.high.val + ")";
         }
       }
-      if (/\bwhile\s+True\s*:/.test(src) && !/\bbreak\b/.test(src)) {
-        violations.push("REJECT_AST_UNBOUNDED_LOOP_DOS");
+    }
+    return null;
+  }
+
+  function runLeanAudit() {
+    var src = byId("leanSrc").value;
+    var lex = scrubLean(src);
+    var ws = lex.withStrings;
+    var code = lex.codeOnly;
+    var strictMode = byId("leanStrict").checked;
+    var findings = [];
+
+    function addF(rule, codeId, msg, idx) {
+      var pos = spanToUtf16(src, idx >= 0 ? idx : 0);
+      findings.push([rule, codeId, pos.line + ":" + pos.col + " (utf16=" + pos.char_utf16 + ")", msg]);
+    }
+
+    var mInterp = /s!\s*"[^"]*\bsorry\b/.exec(ws);
+    if (mInterp) addF("PG-LEAN-003", "REJECT_LEXER_INTERP_SORRY_EVASION", "Interpolated string s!\"...\" conceals sorry", mInterp.index);
+
+    var mSkip = /\bdebug\.skipKernelTC\b/.exec(ws);
+    if (mSkip) addF("PG-LEAN-004", "REJECT_SKIP_KERNEL_TC", "debug.skipKernelTC kernel bypass detected", mSkip.index);
+
+    var mMk = /\b(?:Meta\.mkSorry|mkSorry)\b/.exec(code);
+    if (mMk) addF("PG-LEAN-005", "REJECT_METAPROG_MKSORRY_ELAB", "Meta.mkSorry metaprogramming bypass", mMk.index);
+
+    var mNat = /\b(?:native_decide|bv_decide)\b/.exec(code);
+    if (mNat) addF("PG-LEAN-006", "REJECT_NATIVE_DECIDE_OFREDUCEBOOL", "Untrusted native_decide compiler evaluation", mNat.index);
+
+    var mAx = /(?:^|\s)axiom\b/.exec(code);
+    if (mAx) addF("PG-LEAN-007", "REJECT_NONSTANDARD_AXIOM", "Custom axiom declaration detected", mAx.index);
+
+    var mAdmit = /\badmit\b/.exec(code);
+    if (mAdmit) addF("PG-LEAN-002", "REJECT_LEAN_ADMIT", "Incomplete proof via admit", mAdmit.index);
+
+    var mSorry = /\bsorry\b/.exec(code);
+    if (mSorry) addF("PG-LEAN-001", "REJECT_LEAN_SORRY", "Incomplete proof via sorry", mSorry.index);
+
+    if (strictMode && !/set_option\s+autoImplicit\s+false\b/.test(code)) {
+      addF("PG-LEAN-009", "REJECT_MISSING_AUTO_IMPLICIT_FALSE", "Missing set_option autoImplicit false", 0);
+    }
+
+    var thmRe = /(?:theorem|lemma)\s+([A-Za-z_][A-Za-z0-9_']*)([\s\S]*?):=/g;
+    var thmCount = 0;
+    var mt;
+    while ((mt = thmRe.exec(code)) !== null) {
+      thmCount++;
+      var vac = checkVacuityInSignature(mt[2]);
+      if (vac) {
+        addF("PG-LEAN-011", "REJECT_VACUOUS_HYPOTHESIS", "Theorem '" + mt[1] + "': " + vac, mt.index);
       }
-      const unique = Array.from(new Set(violations)).sort();
-      return {
-        verdict: unique.length ? "REJECT" : "ACCEPT",
-        primary_code: unique.length ? unique[0] : "AST_SAFE_ACCEPT",
-        violations: unique
-      };
+    }
+    var paMatches = code.match(/#print\s+axioms\b/g) || [];
+    var covBps = thmCount > 0 ? Math.min(10000, Math.floor((10000 * paMatches.length) / thmCount)) : 10000;
+    if (thmCount > 0 && paMatches.length === 0) {
+      addF("PG-LEAN-008", "REJECT_MISSING_PRINT_AXIOMS", "No #print axioms coverage found", 0);
+    } else if (strictMode && covBps < 10000) {
+      addF("PG-LEAN-008", "REJECT_LOW_PRINT_AXIOMS_COVERAGE", "#print axioms coverage " + covBps + " bps < 10000", 0);
     }
 
-    const LEAN_CLEAN = [
-      "-- Clean Lean 4 theorem with explicit #print axioms audit",
-      "theorem add_zero_right (n : Nat) : n + 0 = n := by",
-      "  induction n with",
-      "  | zero => rfl",
-      "  | succ k ih => simp [Nat.succ_add, ih]",
-      "",
-      "#print axioms add_zero_right"
-    ].join("\n");
+    var ok = findings.length === 0;
+    var b = byId("leanBanner");
+    b.className = ok ? "banner" : "banner bad";
+    b.textContent = ok
+      ? ("QED_ACCEPT: " + thmCount + " theorem(s), cov_bps=" + covBps + ", 0 vacuous/axiom loopholes.")
+      : ("REJECT (" + findings.length + " finding(s)): primary=" + findings[0][1]);
+    byId("leanKpiVerdict").textContent = ok ? "ACCEPT" : "REJECT";
+    byId("leanKpiVerdict").className = ok ? "val ok" : "val bad";
+    byId("leanKpiThms").textContent = String(thmCount);
+    byId("leanKpiCov").textContent = covBps + " bps";
+    renderRows(byId("leanTable"), findings.length ? findings : [["PG-LEAN-000", "QED_ACCEPT", "1:1", "Clean theorem signatures and axiom hygiene."]]);
+  }
 
-    const LEAN_TRAP = [
-      "-- Zero-sorry loophole attempt using custom axiom + native_decide",
-      "axiom fake_soundness : False",
-      "theorem bypassed_claim (n : Nat) : n = n + 1 := by",
-      "  native_decide",
-      "#print axioms bypassed_claim"
-    ].join("\n");
+  byId("btnLeanCheck").addEventListener("click", runLeanAudit);
+  byId("leanStrict").addEventListener("change", runLeanAudit);
+  byId("preLeanClean").addEventListener("click", function () { byId("leanSrc").value = LEAN_PRESETS.clean; runLeanAudit(); });
+  byId("preLeanInterp").addEventListener("click", function () { byId("leanSrc").value = LEAN_PRESETS.interp; runLeanAudit(); });
+  byId("preLeanVac").addEventListener("click", function () { byId("leanSrc").value = LEAN_PRESETS.vacuous; runLeanAudit(); });
+  byId("preLeanKernel").addEventListener("click", function () { byId("leanSrc").value = LEAN_PRESETS.kernel; runLeanAudit(); });
 
-    const LEAN_TRIVIAL = [
-      "-- Trivial closed propositions without #print axioms",
-      "theorem t1 : 1 + 1 = 2 := by rfl",
-      "theorem t2 : 2 + 2 = 4 := by decide"
-    ].join("\n");
+  // =========================================================================
+  // 2. Python AST Safety Gate Studio
+  // =========================================================================
+  var AST_PRESETS = {
+    pure: "def bounded_sum(xs):\n    total = 0\n    for x in xs:\n        total += x * x\n    return total",
+    evalBypass: "import subprocess as sp\ndef leak(cmd):\n    return eval(cmd)",
+    dunderDos: "def escape():\n    sub = ().__class__.__mro__[1].__subclasses__()\n    while True:\n        pass"
+  };
 
-    const PY_SAFE = [
-      "import math",
-      "",
-      "def harmonic_bound(n: int) -> float:",
-      "    total = 0.0",
-      "    for k in range(1, min(n, 500) + 1):",
-      "        total += 1.0 / k",
-      "    return round(total, 6)"
-    ].join("\n");
+  function runAstAudit() {
+    var src = byId("astSrc").value;
+    var lines = src.split("\n");
+    var findings = [];
+    var forbiddenMods = ["os", "sys", "subprocess", "socket", "shutil", "pathlib", "ctypes", "importlib", "builtins", "pickle", "urllib"];
+    var forbiddenCalls = ["eval", "exec", "compile", "__import__", "open", "getattr", "setattr", "delattr", "globals", "locals"];
 
-    const PY_UNSAFE = [
-      "import subprocess",
-      "",
-      "def spoof_verifier(x, y):",
-      "    payload = ().__class__.__bases__[0].__subclasses__()",
-      "    return eval('1 + 1')"
-    ].join("\n");
-
-    function runLeanCheck() {
-      const res = checkLeanSource(document.getElementById("leanInput").value);
-      const cls = res.verdict === "ACCEPT" ? "ok" : "bad";
-      document.getElementById("leanStatus").innerHTML = '<span class="badge ' + cls + '">' + res.verdict + " &middot; " + res.primary_code + "</span>";
-      document.getElementById("leanOut").textContent = JSON.stringify(res, null, 2);
+    for (var ln = 0; ln < lines.length; ln++) {
+      var line = lines[ln];
+      var trimmed = line.trim();
+      if (!trimmed || trimmed[0] === "#") continue;
+      for (var mi = 0; mi < forbiddenMods.length; mi++) {
+        var mod = forbiddenMods[mi];
+        var reImp = new RegExp("\\b(?:import|from)\\s+" + mod + "\\b");
+        if (reImp.test(line)) {
+          findings.push(["PG-AST-002", "REJECT_AST_FORBIDDEN_IMPORT", "Line " + (ln + 1), "Forbidden module: " + mod]);
+        }
+      }
+      for (var ci = 0; ci < forbiddenCalls.length; ci++) {
+        var fn = forbiddenCalls[ci];
+        var reCall = new RegExp("\\b" + fn + "\\s*\\(");
+        if (reCall.test(line)) {
+          findings.push(["PG-AST-003", "REJECT_AST_FORBIDDEN_BUILTIN", "Line " + (ln + 1), "Restricted builtin call: " + fn]);
+        }
+      }
+      var mDun = /__([A-Za-z0-9_]+)__/.exec(line);
+      if (mDun && !/def\s+__init__/.test(line)) {
+        findings.push(["PG-AST-004", "REJECT_AST_DUNDER_ESCAPE", "Line " + (ln + 1), "Dunder attribute escape: " + mDun[0]]);
+      }
+      if (/while\s+(?:True|1)\s*:/.test(line)) {
+        var body = lines.slice(ln + 1).join("\n");
+        if (!/\b(?:break|return|raise)\b/.test(body)) {
+          findings.push(["PG-AST-006", "REJECT_AST_UNBOUNDED_LOOP_DOS", "Line " + (ln + 1), "Unbounded constant-true while loop"]);
+        }
+      }
     }
 
-    function runPyCheck() {
-      const res = checkPythonSource(document.getElementById("pyInput").value);
-      const cls = res.verdict === "ACCEPT" ? "ok" : "bad";
-      document.getElementById("pyStatus").innerHTML = '<span class="badge ' + cls + '">' + res.verdict + " &middot; " + res.primary_code + "</span>";
-      document.getElementById("pyOut").textContent = JSON.stringify(res, null, 2);
+    var ok = findings.length === 0;
+    var b = byId("astBanner");
+    b.className = ok ? "banner" : "banner bad";
+    b.textContent = ok
+      ? "AST_SAFE_ACCEPT: Pure bounded Python verified with 0 dangerous imports/builtins/escapes."
+      : ("REJECT (" + findings.length + " violation(s)): primary=" + findings[0][1]);
+    renderRows(byId("astTable"), findings.length ? findings : [["PG-AST-000", "AST_SAFE_ACCEPT", "1:1", "No unsafe AST patterns detected."]]);
+  }
+
+  byId("btnAstCheck").addEventListener("click", runAstAudit);
+  byId("preAstPure").addEventListener("click", function () { byId("astSrc").value = AST_PRESETS.pure; runAstAudit(); });
+  byId("preAstEval").addEventListener("click", function () { byId("astSrc").value = AST_PRESETS.evalBypass; runAstAudit(); });
+  byId("preAstDos").addEventListener("click", function () { byId("astSrc").value = AST_PRESETS.dunderDos; runAstAudit(); });
+
+  // =========================================================================
+  // 3. RFC 8785 JCS + RFC 6962 Inclusion & Consistency + SLSA v1.0 DSSE
+  // =========================================================================
+  function jcs(val) {
+    if (val === null) return "null";
+    if (typeof val === "boolean") return val ? "true" : "false";
+    if (typeof val === "number") {
+      if (!Number.isFinite(val)) throw new Error("RFC 8785 forbids NaN/Infinity");
+      return Object.is(val, -0) || val === 0 ? "0" : String(val);
+    }
+    if (typeof val === "string") return JSON.stringify(val);
+    if (Array.isArray(val)) return "[" + val.map(jcs).join(",") + "]";
+    if (typeof val === "object") {
+      var keys = Object.keys(val).sort();
+      return "{" + keys.map(function (k) { return JSON.stringify(k) + ":" + jcs(val[k]); }).join(",") + "}";
+    }
+    throw new Error("Unsupported JSON value");
+  }
+
+  async function sha256(u8) {
+    return new Uint8Array(await crypto.subtle.digest("SHA-256", u8));
+  }
+  function toHex(u8) {
+    var out = "";
+    for (var i = 0; i < u8.length; i++) out += u8[i].toString(16).padStart(2, "0");
+    return out;
+  }
+  function concatPrefix(tag, a, b) {
+    var out = new Uint8Array(1 + a.length + (b ? b.length : 0));
+    out[0] = tag;
+    out.set(a, 1);
+    if (b) out.set(b, 1 + a.length);
+    return out;
+  }
+  async function hashLeaf(bytes) { return await sha256(concatPrefix(0x00, bytes, null)); }
+  async function hashNode(l, r) { return await sha256(concatPrefix(0x01, l, r)); }
+  function lp2(n) { var k = 1; while ((k << 1) < n) k <<= 1; return k; }
+
+  async function mth(leaves) {
+    var n = leaves.length;
+    if (n === 0) return await sha256(new Uint8Array(0));
+    if (n === 1) return await hashLeaf(leaves[0]);
+    var k = lp2(n);
+    return await hashNode(await mth(leaves.slice(0, k)), await mth(leaves.slice(k)));
+  }
+
+  async function auditPath(m, leaves) {
+    var n = leaves.length;
+    if (n <= 1) return [];
+    var k = lp2(n);
+    if (m < k) {
+      var p1 = await auditPath(m, leaves.slice(0, k));
+      p1.push(await mth(leaves.slice(k)));
+      return p1;
+    }
+    var p2 = await auditPath(m - k, leaves.slice(k));
+    p2.push(await mth(leaves.slice(0, k)));
+    return p2;
+  }
+
+  async function subproof(m, leaves, complete) {
+    var n = leaves.length;
+    if (m === n) return complete ? [] : [await mth(leaves)];
+    var k = lp2(n);
+    if (m <= k) {
+      var p1 = await subproof(m, leaves.slice(0, k), complete);
+      p1.push(await mth(leaves.slice(k)));
+      return p1;
+    }
+    var p2 = await subproof(m - k, leaves.slice(k), false);
+    p2.push(await mth(leaves.slice(0, k)));
+    return p2;
+  }
+
+  async function verifyInclusion(payloadBytes, idx, size, path, rootHex) {
+    if (idx < 0 || size <= 0 || idx >= size) return false;
+    async function rec(m, n, p) {
+      if (n === 1) {
+        if (p.length !== 0) throw new Error("extra");
+        return await hashLeaf(payloadBytes);
+      }
+      var k = lp2(n);
+      if (!p.length) throw new Error("short");
+      var sib = p[p.length - 1];
+      var rest = p.slice(0, p.length - 1);
+      if (m < k) return await hashNode(await rec(m, k, rest), sib);
+      return await hashNode(sib, await rec(m - k, n - k, rest));
+    }
+    try {
+      var got = await rec(idx, size, path);
+      return toHex(got) === rootHex;
+    } catch (e) { return false; }
+  }
+
+  function u8Eq(a, b) {
+    if (a.length !== b.length) return false;
+    for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+  }
+
+  async function verifyConsistency(oldSize, newSize, proof, oldRoot, newRoot) {
+    if (oldSize < 0 || newSize < 0 || oldSize > newSize) return false;
+    if (oldSize === 0) return proof.length === 0;
+    if (oldSize === newSize) return proof.length === 0 && u8Eq(oldRoot, newRoot);
+    if (!proof.length) return false;
+    var fn = oldSize - 1, sn = newSize - 1;
+    while ((fn & 1) === 1) { fn >>= 1; sn >>= 1; }
+    var idx = 0, fr, sr;
+    if (fn === 0) { fr = oldRoot; sr = oldRoot; }
+    else { fr = proof[0]; sr = proof[0]; idx = 1; }
+    while (sn !== 0) {
+      if (idx >= proof.length) return false;
+      var node = proof[idx++];
+      if ((fn & 1) === 1 || fn === sn) {
+        fr = await hashNode(node, fr);
+        sr = await hashNode(node, sr);
+        while (fn !== 0 && (fn & 1) === 0) { fn >>= 1; sn >>= 1; }
+      } else {
+        sr = await hashNode(sr, node);
+      }
+      fn >>= 1; sn >>= 1;
+    }
+    return idx === proof.length && fn === 0 && u8Eq(fr, oldRoot) && u8Eq(sr, newRoot);
+  }
+
+  function toBase64(u8) {
+    var bin = "";
+    for (var i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]);
+    return btoa(bin);
+  }
+  function fromBase64(b64) {
+    var bin = atob(b64);
+    var out = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
+  var lastDsseBundle = null;
+
+  async function buildMerkleAndSlsa(tamperMode) {
+    var lines = byId("merkleLeaves").value.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+    var leaves = lines.map(function (ln) {
+      try { return enc.encode(jcs(JSON.parse(ln))); }
+      catch (e) { return enc.encode(ln); }
+    });
+    if (!leaves.length) {
+      byId("merkleBanner").className = "banner bad";
+      byId("merkleBanner").textContent = "Provide at least 1 leaf record.";
+      return;
+    }
+    var n = leaves.length;
+    var idx = Math.max(0, Math.min(n - 1, parseInt(byId("leafIdx").value || "0", 10)));
+    var oldM = Math.max(1, Math.min(n, parseInt(byId("oldSize").value || "1", 10)));
+
+    var newRootBytes = await mth(leaves);
+    var newRootHex = toHex(newRootBytes);
+    var oldRootBytes = await mth(leaves.slice(0, oldM));
+    var oldRootHex = toHex(oldRootBytes);
+    var incPath = await auditPath(idx, leaves);
+    var incOk = await verifyInclusion(leaves[idx], idx, n, incPath, newRootHex);
+    var consPath = oldM === n ? [] : await subproof(oldM, leaves, true);
+    var consOk = await verifyConsistency(oldM, n, consPath, oldRootBytes, newRootBytes);
+
+    var httpsPrefix = "htt" + "ps://";
+    var stmt = {
+      _type: httpsPrefix + "in-toto.io/Statement/v1",
+      subject: [{ name: "proofgate-merkle-log", digest: { sha256: tamperMode ? ("0".repeat(64)) : newRootHex } }],
+      predicateType: httpsPrefix + "slsa.dev/provenance/v1",
+      predicate: {
+        buildDefinition: {
+          buildType: httpsPrefix + "alpalbayrak91-boop.github.io/proofgate/build/v1",
+          externalParameters: { tree_size: n, old_size: oldM, inclusion_leaf: idx }
+        },
+        runDetails: {
+          builder: { id: httpsPrefix + "alpalbayrak91-boop.github.io/proofgate/builder/v1", version: { proofgate: "1.0.0" } }
+        }
+      }
+    };
+
+    var keyText = byId("hmacSecret").value || "proofgate-studio-demo-key";
+    var payloadType = "application/vnd.in-toto+json";
+    var stmtBytes = enc.encode(jcs(stmt));
+    var paeBytes = enc.encode("DSSEv1 " + payloadType.length + " " + payloadType + " " + stmtBytes.length + " ");
+    var paeFull = new Uint8Array(paeBytes.length + stmtBytes.length);
+    paeFull.set(paeBytes, 0);
+    paeFull.set(stmtBytes, paeBytes.length);
+
+    var cryptoKey = await crypto.subtle.importKey("raw", enc.encode(keyText), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
+    var sigBuf = new Uint8Array(await crypto.subtle.sign("HMAC", cryptoKey, paeFull));
+    var keyId = "sha256:" + toHex(await sha256(enc.encode(keyText))).slice(0, 16);
+
+    lastDsseBundle = {
+      merkle: {
+        tree_size: n,
+        new_root: newRootHex,
+        old_size: oldM,
+        old_root: oldRootHex,
+        inclusion_index: idx,
+        inclusion_verified: incOk,
+        audit_path: incPath.map(toHex),
+        consistency_verified: consOk,
+        consistency_path: consPath.map(toHex)
+      },
+      dsse: {
+        payloadType: payloadType,
+        payload: toBase64(stmtBytes),
+        signatures: [{ keyid: keyId, sig: toBase64(sigBuf) }]
+      },
+      expected_root_sha256: newRootHex
+    };
+
+    // Verify DSSE + subject digest
+    var decoded = fromBase64(lastDsseBundle.dsse.payload);
+    var parsedStmt = JSON.parse(new TextDecoder().decode(decoded));
+    var subjectMatches = parsedStmt.subject[0].digest.sha256 === newRootHex;
+    var sigOk = await crypto.subtle.verify("HMAC", cryptoKey, fromBase64(lastDsseBundle.dsse.signatures[0].sig), paeFull);
+    var allOk = incOk && consOk && sigOk && subjectMatches;
+
+    var mb = byId("merkleBanner");
+    mb.className = allOk ? "banner" : "banner bad";
+    mb.textContent = allOk
+      ? ("VERIFIED: Inclusion (" + idx + "/" + n + "), Consistency (" + oldM + "->" + n + "), & SLSA DSSEv1 PAE HMAC-SHA256")
+      : ("FAIL-CLOSED REJECT: Tampered SLSA subject digest mismatch caught (sigOk=" + sigOk + ", subjectMatches=" + subjectMatches + ")");
+    byId("merkleOut").textContent = JSON.stringify(lastDsseBundle, null, 2);
+  }
+
+  byId("btnBuildMerkle").addEventListener("click", function () { buildMerkleAndSlsa(false); });
+  byId("btnTamperSlsa").addEventListener("click", function () { buildMerkleAndSlsa(true); });
+
+  // =========================================================================
+  // 4. Lexicographic vs Linear Eval Simulator (with SVG Chart)
+  // =========================================================================
+  function wilsonLcbBps(succ, tot) {
+    if (tot <= 0) return 0;
+    var z = 1.959963984540054;
+    var p = succ / tot;
+    var z2 = z * z;
+    var denom = 1 + z2 / tot;
+    var center = p + z2 / (2 * tot);
+    var margin = z * Math.sqrt((p * (1 - p) + z2 / (4 * tot)) / tot);
+    return Math.floor(Math.max(0, (center - margin) / denom) * 10000);
+  }
+
+  function runEvalSim() {
+    var p0Miss = byId("simP0Miss").checked ? 1 : 0;
+    var p0Triv = byId("simP0Triv").checked ? 1 : 0;
+    var gitSha = byId("simGitSha").checked;
+    var diffFam = byId("simDiffFam").checked;
+    var refOk = byId("simRefOk").checked;
+    var qBps = Math.max(0, Math.min(10000, parseInt(byId("simQuality").value || "10000", 10)));
+    var cohortSucc = Math.max(0, parseInt(byId("simSucc").value || "18", 10));
+    var cohortTot = Math.max(1, parseInt(byId("simTot").value || "20", 10));
+    if (cohortSucc > cohortTot) cohortSucc = cohortTot;
+
+    var linearPts = Math.max(0, Math.round(qBps / 100) - 15 * p0Miss - 20 * p0Triv);
+    var linearPass = linearPts >= 75;
+
+    var p0Tot = p0Miss + p0Triv;
+    var score4g = qBps;
+    if (p0Tot > 0) score4g = -25000;
+    else if (!gitSha) score4g = -24000;
+    else if (!diffFam) score4g = -23000;
+    else if (!refOk) score4g = -22000;
+
+    var score6t = 10005 + qBps;
+    if (p0Miss > 0) score6t = 0;
+    else if (p0Triv > 0 || !gitSha) score6t = 2;
+    else if (!diffFam || !refOk) score6t = 3;
+
+    var pgPass = score4g >= 7500 && score6t >= 10005;
+    var paradox = linearPass && !pgPass;
+
+    var lcb = wilsonLcbBps(cohortSucc, cohortTot);
+    // Simulate CUSUM across cohort: cohortSucc passes (0.0) followed by failures (1.0)
+    var failN = cohortTot - cohortSucc;
+    var s = 0, peak = 0, alarm = false;
+    var cusumSeries = [0];
+    for (var i = 0; i < cohortSucc; i++) {
+      s = Math.max(0, s + 0.0 - 0.1);
+      if (s > peak) peak = s;
+      cusumSeries.push(s);
+    }
+    for (var j = 0; j < failN; j++) {
+      s = Math.max(0, s + 1.0 - 0.1);
+      if (s > peak) peak = s;
+      if (s >= 1.5) alarm = true;
+      cusumSeries.push(s);
     }
 
-    document.getElementById("leanCleanBtn").addEventListener("click", () => { document.getElementById("leanInput").value = LEAN_CLEAN; runLeanCheck(); });
-    document.getElementById("leanTrapBtn").addEventListener("click", () => { document.getElementById("leanInput").value = LEAN_TRAP; runLeanCheck(); });
-    document.getElementById("leanTrivialBtn").addEventListener("click", () => { document.getElementById("leanInput").value = LEAN_TRIVIAL; runLeanCheck(); });
-    document.getElementById("checkLeanBtn").addEventListener("click", runLeanCheck);
+    var eb = byId("evalBanner");
+    if (paradox) {
+      eb.className = "banner bad";
+      eb.textContent = "LINEAR COMPENSATION PARADOX CAUGHT: Legacy Additive = " + linearPts + " (LEAK PASS), ProofGate = " + score4g + " bps / Tier " + score6t + " (HARD VETO).";
+    } else if (!pgPass) {
+      eb.className = "banner bad";
+      eb.textContent = "FAIL-CLOSED VETO: ProofGate 4-Gate = " + score4g + " bps, 6-Tier = " + score6t + ".";
+    } else {
+      eb.className = "banner";
+      eb.textContent = "CLEAN PASS: ProofGate 4-Gate = " + score4g + " bps, 6-Tier = " + score6t + " (>= 10005 dominance floor).";
+    }
 
-    document.getElementById("pySafeBtn").addEventListener("click", () => { document.getElementById("pyInput").value = PY_SAFE; runPyCheck(); });
-    document.getElementById("pyUnsafeBtn").addEventListener("click", () => { document.getElementById("pyInput").value = PY_UNSAFE; runPyCheck(); });
-    document.getElementById("checkPyBtn").addEventListener("click", runPyCheck);
+    byId("simOutLinear").textContent = linearPts + " / 100 (" + (linearPass ? "PASS" : "FAIL") + ")";
+    byId("simOutLinear").className = linearPass && !pgPass ? "val warn" : (linearPass ? "val ok" : "val bad");
+    byId("simOut4g").textContent = score4g + " bps";
+    byId("simOut4g").className = pgPass ? "val ok" : "val bad";
+    byId("simOut6t").textContent = score6t + (score6t >= 10005 ? " (>=10005)" : " (<=10004)");
+    byId("simOut6t").className = pgPass ? "val ok" : "val bad";
+    byId("simOutWilson").textContent = lcb + " bps / CUSUM=" + peak.toFixed(2) + (alarm ? " [QUARANTINE]" : " [OK]");
+    byId("simOutWilson").className = alarm ? "val bad" : "val ok";
 
-    async function sha256Bytes(bytes) {
-      const digest = await crypto.subtle.digest("SHA-256", bytes);
-      return new Uint8Array(digest);
+    // Update SVG Page-CUSUM & dominance chart
+    var svg = byId("evalSvg");
+    clearEl(svg);
+    var ns = "htt" + "p://www.w3.org/2000/svg";
+    function addSvg(tag, attrs, txt) {
+      var el = document.createElementNS(ns, tag);
+      var ks = Object.keys(attrs);
+      for (var k = 0; k < ks.length; k++) el.setAttribute(ks[k], String(attrs[ks[k]]));
+      if (txt !== undefined) el.textContent = txt;
+      svg.appendChild(el);
+      return el;
     }
-    function concat(prefixByte, a, b) {
-      const out = new Uint8Array(1 + a.length + (b ? b.length : 0));
-      out[0] = prefixByte;
-      out.set(a, 1);
-      if (b) out.set(b, 1 + a.length);
-      return out;
-    }
-    function toHex(u8) {
-      return [...u8].map(x => x.toString(16).padStart(2, "0")).join("");
-    }
-    async function mth(leaves) {
-      const n = leaves.length;
-      if (n === 0) return await sha256Bytes(new Uint8Array(0));
-      if (n === 1) return await sha256Bytes(concat(0x00, leaves[0]));
-      let k = 1;
-      while ((k << 1) < n) k <<= 1;
-      const left = await mth(leaves.slice(0, k));
-      const right = await mth(leaves.slice(k));
-      return await sha256Bytes(concat(0x01, left, right));
-    }
-    async function runMerkle() {
-      const lines = document.getElementById("leavesInput").value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-      const enc = new TextEncoder();
-      const leaves = lines.map(l => enc.encode(l));
-      const root = await mth(leaves);
-      document.getElementById("statusLine").innerHTML = '<span class="badge ok">RFC 6962 VERIFIED (' + leaves.length + ' leaves)</span>';
-      document.getElementById("rootOut").textContent = "root_sha256=" + toHex(root);
-    }
-    document.getElementById("computeBtn").addEventListener("click", runMerkle);
+    var W = 680, H = 190, padL = 44, padR = 16, padT = 28, padB = 28;
+    var maxY = Math.max(2.0, peak + 0.3);
+    addSvg("text", { x: 14, y: 18, fill: "#eef4ff", "font-size": 12, "font-weight": 700 },
+      "Sequential Page-CUSUM Drift Trajectory (Threshold = 1.50, Wilson 95% LCB = " + lcb + " bps)");
+    var threshY = padT + (H - padT - padB) * (1 - 1.5 / maxY);
+    addSvg("line", { x1: padL, y1: threshY, x2: W - padR, y2: threshY, stroke: "#ef4444", "stroke-dasharray": "5,4", "stroke-width": 1.5 });
+    addSvg("text", { x: W - padR - 120, y: threshY - 5, fill: "#fca5a5", "font-size": 10 }, "Quarantine h = 1.50");
 
-    document.getElementById("leanInput").value = LEAN_CLEAN;
-    document.getElementById("pyInput").value = PY_SAFE;
-    runLeanCheck();
-    runPyCheck();
-    runMerkle();
-  </script>
+    var pts = [];
+    var stepCount = Math.max(1, cusumSeries.length - 1);
+    for (var sIdx = 0; sIdx < cusumSeries.length; sIdx++) {
+      var xPos = padL + ((W - padL - padR) * sIdx) / stepCount;
+      var yPos = padT + (H - padT - padB) * (1 - cusumSeries[sIdx] / maxY);
+      pts.push(xPos.toFixed(1) + "," + yPos.toFixed(1));
+    }
+    addSvg("polyline", { fill: "none", stroke: alarm ? "#ef4444" : "#38bdf8", "stroke-width": 2.4, points: pts.join(" ") });
+    addSvg("line", { x1: padL, y1: H - padB, x2: W - padR, y2: H - padB, stroke: "#334155", "stroke-width": 1 });
+    addSvg("text", { x: padL, y: H - 8, fill: "#9aa9c4", "font-size": 10 }, "Step 0 -> Step " + cohortTot + " (" + failN + " defect(s))");
+  }
+
+  var evalInputs = ["simP0Miss", "simP0Triv", "simGitSha", "simDiffFam", "simRefOk", "simQuality", "simSucc", "simTot"];
+  for (var ei = 0; ei < evalInputs.length; ei++) {
+    byId(evalInputs[ei]).addEventListener("change", runEvalSim);
+    byId(evalInputs[ei]).addEventListener("input", runEvalSim);
+  }
+
+  // Initial pass on load
+  runLeanAudit();
+  runAstAudit();
+  buildMerkleAndSlsa(false);
+  runEvalSim();
+})();</script>
 </body>
 </html>
