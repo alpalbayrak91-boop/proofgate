@@ -1,0 +1,1 @@
+{"bomFormat":"CycloneDX","metadata":{"component":{"hashes":[{"alg":"SHA-256","content":"1e803643a3834657feaac9a2fc68c84f957480ee6f0f217f811ac603a9bc1f03"}],"name":"latexrestricted","properties":[{"name":"wheelcap:evidence-count:exec","value":"7"},{"name":"wheelcap:evidence-count:fs","value":"15"}],"type":"library","version":"0.6.2"}},"specVersion":"1.6","version":1}
