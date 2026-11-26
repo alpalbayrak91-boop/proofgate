@@ -97,8 +97,8 @@ class TestSpecDiffRewardHackGate(unittest.TestCase):
 
         ci_text = (REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
         self.assertIn("workflow_dispatch:", ci_text)
-        self.assertNotIn("push:", ci_text)
-        self.assertNotIn("pull_request:", ci_text)
+        self.assertIn("push:", ci_text)
+        self.assertIn("pull_request:", ci_text)
 
 
 if __name__ == "__main__":
