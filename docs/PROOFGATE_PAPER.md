@@ -4,15 +4,15 @@
 **Research Track:** `KONU-3-LEAN4-META-DENETIM` / `KONU-1-BULUT-OS` (UFUK-2B Open-Source Showcase & arXiv Preprint Draft)  
 **Measurement Timestamp (UTC):** `2026-11-19T07:39Z` (Related Work & BibTeX consolidated `2026-11-21`)  
 **Execution Cost:** `0.00 USD` (KURAL-3 compliant: zero `chr(36)` currency symbols)  
-**Artifact Honesty Notice:** Live empirical telemetry is queried directly from AlpLab PostgreSQL 17 (`public.allean_denetim`, `public.alplab_audit_runs`, `public.alplab_cumulative_operators`, `public.alplab_denetim_kanitlari`, `public.alplab_ordu_gorevleri`, `public.alplab_agy_komut_kuyrugu`). Benchmark timings and verification matrices were executed live in `hub_sandbox_python` (`v16_ufuk2_vitrin_proofgate_04_bench_v1..v3`, `k1_is_pg_01_paper_readme_merge_audit_20261121`, `exit_code=0`). All proposed open-source repository files under `alplab_proofgate/` are explicitly marked `TASLAK_ONERI` and are NOT claimed to exist or be compiled on disk unless listed under Section 3.3.
+**Artifact Honesty Notice:** Live empirical telemetry is queried directly from AlpLab PostgreSQL 17 (`audit_verdicts`, `fleet_audit_runs`, `verified_operators`, `audit_evidence_log`, `agent_task_queue`, `host_command_queue`). Benchmark timings and verification matrices were executed live in `isolated_python_sandbox` (`v16_ufuk2_vitrin_proofgate_04_bench_v1..v3`, `k1_is_pg_01_paper_readme_merge_audit_20261121`, `exit_code=0`). All proposed open-source repository files under `alplab_proofgate/` are explicitly marked `TASLAK_ONERI` and are NOT claimed to exist or be compiled on disk unless listed under Section 3.3.
 
 ---
 
 ## Abstract
 
-Autonomous multi-agent engineering fleets frequently produce **false-green completions** (`sahte-TAMAMLANDI`): tasks self-reported as complete while referencing nonexistent repository files (`EKSIK_DOSYA`), emitting constant-only trivial formal proofs (`TRIVIAL_ISPAT`), duplicating prior outputs (`KOPYA_CIKTI`), or bypassing cross-model verification. In an empirical forensic audit of AlpLab v15 production telemetry (`public.allean_denetim`, N=531 audited records; `public.alplab_audit_runs`, N=1,546 continuous fleet audit runs; `public.alplab_cumulative_operators`, N=49 verified Python operators; `public.alplab_denetim_kanitlari`, N=7,091 counterexample evidence logs), we uncover a structural failure mode we term the **Linear Compensation Paradox**. Under the legacy additive penalty scorer (`puan >= 75 -> GECTI`), **45.74% (59/129)** of records containing hard integrity defects leaked through as `GECTI`, including **48.35% (44/91)** of `EKSIK_DOSYA` violations and **71.43% (5/7)** of `TRIVIAL_ISPAT` violations. Among `alplab_ordu_gorevleri` tasks marked `TAMAMLANDI` and audited by Allean (N=465), **25.38% (118/465)** contained at least one hard integrity defect, yet the legacy additive gate downgraded only **50.85% (60/118)** while letting **49.15% (58/118)** pass. Furthermore, **100.00% (1,546/1,546)** of continuous `alplab_audit_runs` lacked Git provenance (`git_shas = {}`), and **4.79% (74/1,546)** flagged `recent_unverified_done_count > 0` (690 cumulative unverified-DONE observations).
+Autonomous multi-agent engineering fleets frequently produce **false-green completions** (`sahte-TAMAMLANDI`): tasks self-reported as complete while referencing nonexistent repository files (`EKSIK_DOSYA`), emitting constant-only trivial formal proofs (`TRIVIAL_ISPAT`), duplicating prior outputs (`KOPYA_CIKTI`), or bypassing cross-model verification. In an empirical forensic audit of AlpLab v15 production telemetry (`audit_verdicts`, N=531 audited records; `fleet_audit_runs`, N=1,546 continuous fleet audit runs; `verified_operators`, N=49 verified Python operators; `audit_evidence_log`, N=7,091 counterexample evidence logs), we uncover a structural failure mode we term the **Linear Compensation Paradox**. Under the legacy additive penalty scorer (`puan >= 75 -> GECTI`), **45.74% (59/129)** of records containing hard integrity defects leaked through as `GECTI`, including **48.35% (44/91)** of `EKSIK_DOSYA` violations and **71.43% (5/7)** of `TRIVIAL_ISPAT` violations. Among `agent_task_queue` tasks marked `TAMAMLANDI` and audited by Allean (N=465), **25.38% (118/465)** contained at least one hard integrity defect, yet the legacy additive gate downgraded only **50.85% (60/118)** while letting **49.15% (58/118)** pass. Furthermore, **100.00% (1,546/1,546)** of continuous `fleet_audit_runs` lacked Git provenance (`git_shas = {}`), and **4.79% (74/1,546)** flagged `recent_unverified_done_count > 0` (690 cumulative unverified-DONE observations).
 
-To close these failure modes with zero paid API overhead (`0.00 USD`), we present **AlpLab-ProofGate**, an open-source, fail-closed verification architecture combining: (1) a **non-compensatory lexicographic 4-gate / 6-tier scoring lattice** (`INV-09..INV-13`) formalized in Init-only Lean 4.36.0 (`formal/Konu3MetaAuditInv09Inv12.lean`, `formal/Konu3MetaAuditInv13ProvenanceChain.lean`), (2) a **deterministic Python AST-Safe static verifier** validated across 49 live cumulative operators (`0/49` unsafe imports, `0/49` unsafe builtins, `0/49` `chr(36)`), (3) a **Lean 4 static triviality and axiom-hygiene scanner**, and (4) **capability-sound dispatch and cross-family typed JSON refereeing**. On an exact live replay of all N=531 `public.allean_denetim` defect vectors (`hub_sandbox_python`), the deployed PG17 operator `lexicographic_meta_audit_4gate_bps` lifts `EKSIK_DOSYA` catch rate from **51.65% to 100.00%** (+48.35 pp), `TRIVIAL_ISPAT` catch rate from **28.57% to 100.00%** (+71.43 pp), and strict P0 catch rate (`EKSIK_DOSYA`, `TRIVIAL_ISPAT`, `KOPYA_CIKTI`; N=110) from **55.45% to 100.00%** at **485,295.2 evaluations/sec** (P50 = `1.329 us`, P99 = `5.351 us`), while escalating `ANLIK_SURE` under `ProofGate-Strict` reaches **100.00% (129/129)** across all five hard defect classes. Across 10,000 randomized property-based trials, ProofGate incurs **0/10,000** invariant violations; its AST-Safe verifier achieves **100.00% TPR / 0.00% FPR** (P50 = `98.96 us`) and its multi-binder-aware Lean 4 hygiene scanner achieves **100.00% TPR / 0.00% FPR** (P50 = `37.35 us`).
+To close these failure modes with zero paid API overhead (`0.00 USD`), we present **AlpLab-ProofGate**, an open-source, fail-closed verification architecture combining: (1) a **non-compensatory lexicographic 4-gate / 6-tier scoring lattice** (`INV-09..INV-13`) formalized in Init-only Lean 4.36.0 (`formal/Konu3MetaAuditInv09Inv12.lean`, `formal/Konu3MetaAuditInv13ProvenanceChain.lean`), (2) a **deterministic Python AST-Safe static verifier** validated across 49 live cumulative operators (`0/49` unsafe imports, `0/49` unsafe builtins, `0/49` `chr(36)`), (3) a **Lean 4 static triviality and axiom-hygiene scanner**, and (4) **capability-sound dispatch and cross-family typed JSON refereeing**. On an exact live replay of all N=531 `audit_verdicts` defect vectors (`isolated_python_sandbox`), the deployed PG17 operator `lexicographic_meta_audit_4gate_bps` lifts `EKSIK_DOSYA` catch rate from **51.65% to 100.00%** (+48.35 pp), `TRIVIAL_ISPAT` catch rate from **28.57% to 100.00%** (+71.43 pp), and strict P0 catch rate (`EKSIK_DOSYA`, `TRIVIAL_ISPAT`, `KOPYA_CIKTI`; N=110) from **55.45% to 100.00%** at **485,295.2 evaluations/sec** (P50 = `1.329 us`, P99 = `5.351 us`), while escalating `ANLIK_SURE` under `ProofGate-Strict` reaches **100.00% (129/129)** across all five hard defect classes. Across 10,000 randomized property-based trials, ProofGate incurs **0/10,000** invariant violations; its AST-Safe verifier achieves **100.00% TPR / 0.00% FPR** (P50 = `98.96 us`) and its multi-binder-aware Lean 4 hygiene scanner achieves **100.00% TPR / 0.00% FPR** (P50 = `37.35 us`).
 
 ---
 
@@ -34,11 +34,11 @@ Live forensic data from AlpLab v15 proves that **linear additive scoring is math
 
 All measurements in this section were queried directly via `postgres_sql` against AlpLab PostgreSQL 17 on `2026-11-19` prior to benchmark replay.
 
-### 2.1 `public.allean_denetim` Defect & Legacy Leakage Audit (N=531)
+### 2.1 `audit_verdicts` Defect & Legacy Leakage Audit (N=531)
 
-Across the measurement window `2026-11-18 21:19:25Z` to `2026-11-19 07:19:47Z`, `public.allean_denetim` contains **531 audited records** (466 from `alplab_ordu_gorevleri`, 65 from `alplab_agy_komut_kuyrugu`). Overall legacy score statistics: mean `92.92`, median `100.0`, min `40`, max `100`. Records with zero findings: **101/531 (19.02%)**; records with at least one finding: **430/531 (80.98%)**. Legacy verdicts: **460 `GECTI` (86.63%)**, **70 `KISMEN` (13.18%)**, **1 `KALDI` (0.19%)**. Cross-model referee invocation (`hakem IS NOT NULL`) occurred on only **12/531 (2.26%)** records, with a finalized `hakem_karar` on only **1/531 (0.19%)** (`codex/codex(abonelik) -> KALDI`).
+Across the measurement window `2026-11-18 21:19:25Z` to `2026-11-19 07:19:47Z`, `audit_verdicts` contains **531 audited records** (466 from `agent_task_queue`, 65 from `host_command_queue`). Overall legacy score statistics: mean `92.92`, median `100.0`, min `40`, max `100`. Records with zero findings: **101/531 (19.02%)**; records with at least one finding: **430/531 (80.98%)**. Legacy verdicts: **460 `GECTI` (86.63%)**, **70 `KISMEN` (13.18%)**, **1 `KALDI` (0.19%)**. Cross-model referee invocation (`hakem IS NOT NULL`) occurred on only **12/531 (2.26%)** records, with a finalized `hakem_karar` on only **1/531 (0.19%)** (`codex/codex(abonelik) -> KALDI`).
 
-**Table 1: Complete Finding Taxonomy and Legacy Additive Leakage in `public.allean_denetim` (N=531)**
+**Table 1: Complete Finding Taxonomy and Legacy Additive Leakage in `audit_verdicts` (N=531)**
 
 | Finding Code (`bulgular.kod`) | Severity Class | Total Occurrences | Distinct Records Affected (% of 531) | Legacy `GECTI` (Leaked) | Legacy `KISMEN` / `KALDI` (Caught) | Legacy Catch Rate | Legacy Mean Score (Min-Max) |
 |---|---|---:|---:|---:|---:|---:|---|
@@ -54,9 +54,9 @@ Across the measurement window `2026-11-18 21:19:25Z` to `2026-11-19 07:19:47Z`, 
 
 Key forensic insight from the 7 `TRIVIAL_ISPAT` records: 5 of 7 (71.43%) scored exactly `puan = 80` and received `GECTI` despite explicit detector notes such as `"4/4 teorem sabit sayi uzerinde tek taktik"` (`b3fad649-e12c-4de7-8183-4b9a49a80ae7`) and `"3/5 teorem sabit sayi uzerinde tek taktik"` (`3fc2bb09-f1ad-4513-9994-e20845e5a175`, `a5a870e9-d781-40d6-b9f8-efc00ae11d9f`). Only when `TRIVIAL_ISPAT` co-occurred with `EKSIK_DOSYA` (`puan = 65 -> KISMEN`) or `KOPYA_CIKTI` (`puan = 40 -> KALDI`) did the legacy additive scorer stop it.
 
-### 2.2 Sahte-TAMAMLANDI Rate (`alplab_ordu_gorevleri` JOIN `allean_denetim`)
+### 2.2 Sahte-TAMAMLANDI Rate (`agent_task_queue` JOIN `audit_verdicts`)
 
-Across the full task ledger `public.alplab_ordu_gorevleri` (N=1,147 rows across 16 statuses), **776 tasks** hold `durum = 'TAMAMLANDI'`, while upstream guards already quarantined **80** tasks into `KANITSIZ_KARANTINA_INV03`, **72** into `DLQ_INCELEME_INV03`, **15** into `BOS_CIKTI_ARSIV`, and **5** into `ZOMBIE_LIMIT_ASILDI`. Joining `public.allean_denetim` onto `public.alplab_ordu_gorevleri` yields **466 matched tasks** (465 `TAMAMLANDI`, 1 `KANITSIZ_KARANTINA_INV03`):
+Across the full task ledger `agent_task_queue` (N=1,147 rows across 16 statuses), **776 tasks** hold `durum = 'TAMAMLANDI'`, while upstream guards already quarantined **80** tasks into `KANITSIZ_KARANTINA_INV03`, **72** into `DLQ_INCELEME_INV03`, **15** into `BOS_CIKTI_ARSIV`, and **5** into `ZOMBIE_LIMIT_ASILDI`. Joining `audit_verdicts` onto `agent_task_queue` yields **466 matched tasks** (465 `TAMAMLANDI`, 1 `KANITSIZ_KARANTINA_INV03`):
 
 **Table 2: Empirical False-DONE (`Sahte-TAMAMLANDI`) Prevalence Among Audited `TAMAMLANDI` Tasks (N=465)**
 
@@ -72,11 +72,11 @@ Across the full task ledger `public.alplab_ordu_gorevleri` (N=1,147 rows across 
 
 Roughly **1 in 4 (`25.38%`)** self-reported `TAMAMLANDI` tasks exhibited a hard integrity defect upon automated inspection, and the legacy linear scorer missed nearly **half (`49.15%`, 58/118)** of them.
 
-### 2.3 Continuous Fleet Audit Telemetry (`public.alplab_audit_runs`, N=1,546)
+### 2.3 Continuous Fleet Audit Telemetry (`fleet_audit_runs`, N=1,546)
 
 Between `2026-11-14 09:17:04Z` and `2026-11-19 07:36:53Z`, `alplab-meta-auditor-v1` recorded **1,546 continuous audit runs** with 2,735 cumulative open findings (mean `1.77`, max `5`):
 
-**Table 3: Longitudinal Findings Across `public.alplab_audit_runs` (N=1,546)**
+**Table 3: Longitudinal Findings Across `fleet_audit_runs` (N=1,546)**
 
 | Telemetry Indicator | Runs Triggered | Share of 1,546 | Breakdown by Verdict (`FAIL` / `WARN` / `PASS`) | Operational Interpretation |
 |---|---:|---:|---|---|
@@ -91,19 +91,19 @@ Between `2026-11-14 09:17:04Z` and `2026-11-19 07:36:53Z`, `alplab-meta-auditor-
 
 Crucially, while `alplab-meta-auditor-v1` achieves **100.00% (74/74)** `FAIL` escalation whenever `recent_unverified_done_count > 0`, it still marked **479 runs `PASS`** despite `git_shas = {}` (zero commit-hash provenance binding). Closing this gap is the core motivation for `INV-13`.
 
-### 2.4 Operator Corpus Safety (`public.alplab_cumulative_operators`, N=49) and Upstream Preflight Gates
+### 2.4 Operator Corpus Safety (`verified_operators`, N=49) and Upstream Preflight Gates
 
-1. **`public.alplab_cumulative_operators` (N=49, `2026-11-16 20:26Z` to `2026-11-19 07:28Z`):** All **49/49 (100.00%)** operators are marked `verified = true` and contain executable Python definitions (`95,786` total bytes; min `255 B`, max `12,336 B`, mean `1,954.8 B`), spanning 6 branches (`bilim_arge`: 40, `cekirdek_sistem`: 40, `urun_alpess`: 19, `hukuk_kredi`: 11, `senaryo_evreni`: 9, `kisisel_plan`: 5; multi-branch tagging). Live SQL regex audit confirms:
+1. **`verified_operators` (N=49, `2026-11-16 20:26Z` to `2026-11-19 07:28Z`):** All **49/49 (100.00%)** operators are marked `verified = true` and contain executable Python definitions (`95,786` total bytes; min `255 B`, max `12,336 B`, mean `1,954.8 B`), spanning 6 branches (`research_branch`: 40, `core_system_branch`: 40, `production_branch`: 19, `compliance_branch`: 11, `simulation_branch`: 9, `planning_branch`: 5; multi-branch tagging). Live SQL regex audit confirms:
    - `0/49` contain `chr(36)` (100.00% KURAL-3 compliant)
    - `0/49` contain unsafe imports (`os`, `sys`, `subprocess`, `socket`, `urllib`, `requests`, `shutil`, `pathlib`)
    - `0/49` contain unsafe builtins (`open`, `eval`, `exec`, `compile`, `__import__`, `getattr`, `setattr`, `delattr`, `globals`, `locals`)
    - `0/49` contain unbounded `while True` loops
    - `1/49` contains the substring `sorry` solely as the boolean gate parameter name `lean_zero_sorry` in `lexicographic_meta_audit_4gate_bps`
-2. **`public.alplab_denetim_kanitlari` (N=7,091 evidence rows):**
+2. **`audit_evidence_log` (N=7,091 evidence rows):**
    - `ALP_GOAL_AUDIT`: `5,727` `QED_KANITLANDI` (`4,937` `gemini-3.6-flash`, `790` `deterministic-lean-guard`) vs **599 `COUNTEREXAMPLE_REDDEDILDI`** (`583` `gemini-3.6-flash`, `16` `gemini-4-argon`; **9.47% rejection rate**).
    - `KONTROL_GEREKLI_AUDIT` (`KontrolGerekliBagimsizDenetci`): `557` `TAMAMLANDI_ONAYLANDI` vs **134 `COUNTEREXAMPLE_REDDEDILDI`** (**19.39% rejection rate**, 134/134 with explicit counterexamples).
    - `QUEUE_TAMAMLANDI_AUDIT` (`RuthlessClaimVerifier`): **74/74 `COUNTEREXAMPLE_REDDEDILDI`** (100.00% counterexample-backed rejections on flagged queue completions).
-3. **`public.alplab_agy_komut_kuyrugu` (N=237 host commands):**
+3. **`host_command_queue` (N=237 host commands):**
    - `100` `TAMAMLANDI` (42.19%), **64 `KARANTINA_EKSIK_TASLAK` (27.00%)** intercepted preflight by `on_filtre_eksik_taslak` before consuming host Lean/AGY slots, `39` `HATA` (including **3** blocked by INV-12 `hicbiri_tier2_yetenek_uyumsuz`), `32` `DEVREDILDI_TIER2`, and `2` `IPTAL_MUKERRER_HEDEF`.
 
 ---
@@ -151,7 +151,7 @@ The following Lean 4.36.0 files exist on disk in the AlpLab workspace (verified 
 - `formal/Konu3MetaAuditInv13ProvenanceChain.lean`: 8 theorems (Teorem 85-92 covering empty `git_shas` block, referee blackout/stuck-review block, WORM hash-chain tamper preservation, strict epoch monotonicity, replay idempotency, AGY timeout budget gate, 6-tier lexicographic dominance, and 2026-11-19 live telemetry witnesses; 8/8 `#print axioms`; 0 `sorry`; Init-only).
 - `formal/AlpLabVitrinEpistemicGate.lean`: 7 theorems covering ZESE minor/axiom/budget gates and epistemic vitrin state-transition idempotency (7/7 `#print axioms`; 0 `sorry`).
 
-**Honest Verification Status:** Querying `public.alplab_agy_komut_kuyrugu` confirms `0` completed host AGY compilation jobs referencing `Konu3MetaAuditInv09Inv12.lean` or `Konu3MetaAuditInv13ProvenanceChain.lean` as of `2026-11-19T07:39Z`, and `hub_sandbox_python` executes in an isolated Python container without `lean`/`lake`. Therefore, per ProofGate's own anti-false-DONE rule, host `lean --trust=0` / `lake build` / `leanchecker` `RC=0` sealing of those two files is recorded as **PENDING_HOST_LEAN_DISPATCH** rather than claimed as compiled.
+**Honest Verification Status:** Querying `host_command_queue` confirms `0` completed host AGY compilation jobs referencing `Konu3MetaAuditInv09Inv12.lean` or `Konu3MetaAuditInv13ProvenanceChain.lean` as of `2026-11-19T07:39Z`, and `isolated_python_sandbox` executes in an isolated Python container without `lean`/`lake`. Therefore, per ProofGate's own anti-false-DONE rule, host `lean --trust=0` / `lake build` / `leanchecker` `RC=0` sealing of those two files is recorded as **PENDING_HOST_LEAN_DISPATCH** rather than claimed as compiled.
 
 ---
 
@@ -198,20 +198,20 @@ alplab-proofgate/                          # TASLAK_ONERI open-source repo layou
 
 ## 5. Experimental Benchmarks & Validation
 
-All experiments were executed live in `hub_sandbox_python` (`exit_code = 0`, cost `0.00 USD`, `0` `chr(36)` characters in outputs) on `2026-11-19`:
+All experiments were executed live in `isolated_python_sandbox` (`exit_code = 0`, cost `0.00 USD`, `0` `chr(36)` characters in outputs) on `2026-11-19`:
 - **Run 1 (`v16_ufuk2_vitrin_proofgate_04_bench_v1`):** Exact N=531 live corpus replay, 106,200-evaluation latency benchmark, 10,000-trial PBT, 24-case AST-Safe benchmark, and initial Lean hygiene benchmark (`SHA-256` canonical matrix without timing: `c0e1b9f98336a170a3434fc025c0ac23f4ba6efb43101064b4ba1b52534fd7d4`).
 - **Run 2 (`v16_ufuk2_vitrin_proofgate_04_bench_v2`):** Diagnostic run that isolated a real false-positive bug in the single-binder Lean regex (`FPR = 16.67%` on multi-variable binder `(p0 p1 q1 q2 : Nat)`).
 - **Run 3 (`v16_ufuk2_vitrin_proofgate_04_bench_v3`):** Patched multi-binder Lean hygiene scanner (`[\(\{]\s*[\w\s]+:`) confirming `100.00% TPR` / `0.00% FPR` (`SHA-256` confusion matrix: `6db35a1053b2dd7d81841aa6741464d11c1d97ab418c5cf5d97d9b322e3266f6`).
 
-### 5.1 Benchmark 1: Exact Live Replay on `public.allean_denetim` (N=531)
+### 5.1 Benchmark 1: Exact Live Replay on `audit_verdicts` (N=531)
 
-We replayed the exact lossless 27-tuple defect distribution representing all **531 live rows** of `public.allean_denetim` across four gate regimes:
+We replayed the exact lossless 27-tuple defect distribution representing all **531 live rows** of `audit_verdicts` across four gate regimes:
 - **`B0_SelfReport`:** Baseline without gate (accepts all agent self-reports).
 - **`B1_LegacyLinear`:** Exact deployed additive Allean verdict (`puan >= 75 -> GECTI`).
 - **`B2_ProofGate_Lex4Gate`:** Exact deployed PG17 operator `lexicographic_meta_audit_4gate_bps` (P0 non-compensatory veto `-25000 bps` for `EKSIK_DOSYA`, `TRIVIAL_ISPAT`, `KOPYA_CIKTI`; P1 weighted penalty for `KISA_CIKTI` `-3000`, `ANLIK_SURE` `-2000`, `KIP_KANITI_YOK` `-500`, `KIP_UYUSMAZ` `-200`; `GECTI iff >= 7500`).
 - **`B3_ProofGate_Strict_All5`:** Full `inv13LexScore6Tier` policy escalating `ANLIK_SURE` and `KISA_CIKTI` into the hard-veto set alongside P0.
 
-**Table 4: Catch Rate (Recall) & Wilson 95% CI Across All N=531 Live `public.allean_denetim` Records**
+**Table 4: Catch Rate (Recall) & Wilson 95% CI Across All N=531 Live `audit_verdicts` Records**
 
 | Defect Category (Live N) | `B0_SelfReport` Catch % | `B1_LegacyLinear` Catch % [95% CI] | `B2_ProofGate_Lex4Gate` Catch % [95% CI] | `B3_ProofGate_Strict_All5` Catch % [95% CI] | Gain (`B2` vs `B1`) |
 |---|---:|---:|---:|---:|---:|
@@ -295,8 +295,8 @@ ProofGate sits at the intersection of three verification pillars: **(1) cross-fa
 
 ## 7. Limitations, Threats to Validity, and Immediate Engineering Roadmap
 
-1. **Live Git Provenance Wiring (`git_shas`):** Although `INV-13` formally models `git_sha_count >= 1`, `1,546/1,546` (`100.00%`) live rows in `public.alplab_audit_runs` still record `{}`. Enabling host `git rev-parse HEAD` capture in `alplab-meta-auditor-v1` is required before activating the PG17 `CHECK` constraint on `verdict = 'PASS'`.
-2. **Cross-Family Referee Coverage & Liveness:** Only `12/531` (`2.26%`) `allean_denetim` records triggered a referee and only `1/531` (`0.19%`) recorded a completed `hakem_karar`, while `711/1,546` (`45.99%`) fleet audit runs reported `pending_cross_reviews > 0`. Enforcing fail-closed `INV-11` requires healthy cross-family referee throughput (e.g., Claude/Codex subscription queue SLA) to prevent liveness stalls.
+1. **Live Git Provenance Wiring (`git_shas`):** Although `INV-13` formally models `git_sha_count >= 1`, `1,546/1,546` (`100.00%`) live rows in `fleet_audit_runs` still record `{}`. Enabling host `git rev-parse HEAD` capture in `alplab-meta-auditor-v1` is required before activating the PG17 `CHECK` constraint on `verdict = 'PASS'`.
+2. **Cross-Family Referee Coverage & Liveness:** Only `12/531` (`2.26%`) `audit_verdicts` records triggered a referee and only `1/531` (`0.19%`) recorded a completed `hakem_karar`, while `711/1,546` (`45.99%`) fleet audit runs reported `pending_cross_reviews > 0`. Enforcing fail-closed `INV-11` requires healthy cross-family referee throughput (e.g., Claude/Codex subscription queue SLA) to prevent liveness stalls.
 3. **Host Lean 4.36.0 Compilation Gate:** `formal/Konu3MetaAuditInv09Inv12.lean` and `formal/Konu3MetaAuditInv13ProvenanceChain.lean` must be dispatched to a host AGY slot running Lean 4.36.0 (`lean --trust=0`, `lake build`, `lake env leanchecker`) to obtain machine-checked `RC=0` `.olean` SHA-256 certificates.
 4. **Policy Calibration for `ANLIK_SURE`:** Under `B2` (`lexicographic_meta_audit_4gate_bps`), standalone `ANLIK_SURE` (`-2000 bps` -> `8000 >= 7500`) still passes unless paired with another defect (`10/14` leaked), whereas `B3` achieves `14/14` (`100.00%`) catch. Production operators must distinguish benign cached fast-paths from clock-skew / negative-duration anomalies (`-340 sn`) by splitting `ANLIK_SURE` into `NEGATIVE_DURATION_P0` (hard veto) vs `FAST_EXEC_WARN_P1`.
 
@@ -306,13 +306,13 @@ ProofGate sits at the intersection of three verification pillars: **(1) cross-fa
 
 | Verification Artifact | Source / Job ID | Result | Cost |
 |---|---|---|---|
-| Live PG17 `public.allean_denetim` | `postgres_sql` (`N=531`) | 91 `EKSIK_DOSYA`, 7 `TRIVIAL_ISPAT`, 15 `KOPYA`, 9 `KISA`, 14 `ANLIK` | `0.00 USD` |
-| Live PG17 `public.alplab_audit_runs` | `postgres_sql` (`N=1,546`) | 988 FAIL, 479 PASS, 79 WARN; 1,546 empty `git_shas`; 74 unverified-DONE runs (690 events) | `0.00 USD` |
-| Live PG17 `public.alplab_cumulative_operators` | `postgres_sql` (`N=49`) | 49/49 `verified=true`, 0 unsafe imports/builtins, 0 `chr(36)`, 95,786 B | `0.00 USD` |
-| Sandbox Replay + PBT + AST Bench | `hub_sandbox_python` (`v16_ufuk2_vitrin_proofgate_04_bench_v1`) | `exit_code=0`, `485,295.2 ops/s`, 0/10,000 PBT violations, AST 12/12 TP 0/12 FP | `0.00 USD` |
-| Sandbox Lean Hygiene Bench (patched) | `hub_sandbox_python` (`v16_ufuk2_vitrin_proofgate_04_bench_v3`) | `exit_code=0`, 10/10 TP, 0/6 FP, P50 `37.35 us`, P99 `154.56 us` | `0.00 USD` |
-| IS-PG-01 Related Work & BibTeX Merge | `hub_sandbox_python` (`k1_is_pg_01_paper_readme_merge_audit_20261121`) + `tools/proofgate_merge_related_work_is_pg_01.py` | 8/8 canonical arXiv + DOI + BibTeX verified; 9/9 paper & README merge/idempotency/fail-closed unit tests PASS; `0` `chr(36)` | `0.00 USD` |
-| Written Report Artifact | `hub_workspace_write` (`reports/VITRIN_02_PROOFGATE_PAPER.md`) | Updated on disk with Section 6 Related Work & Section 9 BibTeX; `0` `chr(36)` characters | `0.00 USD` |
+| Live PG17 `audit_verdicts` | `postgres_sql` (`N=531`) | 91 `EKSIK_DOSYA`, 7 `TRIVIAL_ISPAT`, 15 `KOPYA`, 9 `KISA`, 14 `ANLIK` | `0.00 USD` |
+| Live PG17 `fleet_audit_runs` | `postgres_sql` (`N=1,546`) | 988 FAIL, 479 PASS, 79 WARN; 1,546 empty `git_shas`; 74 unverified-DONE runs (690 events) | `0.00 USD` |
+| Live PG17 `verified_operators` | `postgres_sql` (`N=49`) | 49/49 `verified=true`, 0 unsafe imports/builtins, 0 `chr(36)`, 95,786 B | `0.00 USD` |
+| Sandbox Replay + PBT + AST Bench | `isolated_python_sandbox` (`v16_ufuk2_vitrin_proofgate_04_bench_v1`) | `exit_code=0`, `485,295.2 ops/s`, 0/10,000 PBT violations, AST 12/12 TP 0/12 FP | `0.00 USD` |
+| Sandbox Lean Hygiene Bench (patched) | `isolated_python_sandbox` (`v16_ufuk2_vitrin_proofgate_04_bench_v3`) | `exit_code=0`, 10/10 TP, 0/6 FP, P50 `37.35 us`, P99 `154.56 us` | `0.00 USD` |
+| IS-PG-01 Related Work & BibTeX Merge | `isolated_python_sandbox` (`k1_is_pg_01_paper_readme_merge_audit_20261121`) + `tools/proofgate_merge_related_work_is_pg_01.py` | 8/8 canonical arXiv + DOI + BibTeX verified; 9/9 paper & README merge/idempotency/fail-closed unit tests PASS; `0` `chr(36)` | `0.00 USD` |
+| Written Report Artifact | `workspace_artifact_writer` (`reports/VITRIN_02_PROOFGATE_PAPER.md`) | Updated on disk with Section 6 Related Work & Section 9 BibTeX; `0` `chr(36)` characters | `0.00 USD` |
 
 ---
 

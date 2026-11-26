@@ -4,19 +4,38 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "proofgate"
-version = "1.4.0"
-description = "Zero-dependency Omni-Gate verification toolkit: Lean 4 faithfulness/vacuity/diff/kernel-replay gates, Python AST verifier, SARIF v2.1.0, RFC 6962/8785, SLSA v1.0 DSSE, optional FastMCP server, and non-compensatory multi-agent evaluation"
+version = "2.0.0"
+description = "Zero-dependency 6-layer formal verification and multi-step AI agent trajectory security suite: Lean 4 faithfulness/substance/spec-diff/kernel-replay gates, DIFC + HMAC-SHA256 Macaroons + MCP schema epoch firewall, Python AST verifier, SARIF v2.1.0, RFC 6962/8785, SLSA v1.0 DSSE, and non-compensatory fleet evaluation"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Alp Albayrak" }]
 requires-python = ">=3.10"
-keywords = ["lean4", "formal-verification", "ast", "rfc6962", "merkle-tree", "jcs", "sarif", "slsa", "in-toto", "dsse", "agent-eval"]
+keywords = [
+  "lean4",
+  "formal-verification",
+  "ai-safety",
+  "agent-security",
+  "difc",
+  "macaroons",
+  "mcp",
+  "prompt-injection",
+  "ast",
+  "rfc6962",
+  "merkle-tree",
+  "jcs",
+  "sarif",
+  "slsa",
+  "in-toto",
+  "dsse",
+  "agent-eval",
+]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
+  "Topic :: Security",
   "Topic :: Software Development :: Quality Assurance",
 ]
 

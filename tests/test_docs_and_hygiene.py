@@ -14,9 +14,15 @@ REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 class TestDocsAndHygiene(unittest.TestCase):
     def test_package_version_and_pyproject_v1(self) -> None:
-        self.assertEqual(proofgate.__version__, "1.4.0")
+        self.assertEqual(proofgate.__version__, "2.0.0")
         pyproj = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
-        self.assertIn('version = "1.4.0"', pyproj)
+        self.assertIn('version = "2.0.0"', pyproj)
+        cff = (REPO_ROOT / "CITATION.cff").read_text(encoding="utf-8")
+        self.assertIn('version: "2.0.0"', cff)
+        self.assertIn("0009-0008-9737-4477", cff)
+        zenodo = (REPO_ROOT / ".zenodo.json").read_text(encoding="utf-8")
+        self.assertIn('"version": "2.0.0"', zenodo)
+        self.assertIn("0009-0008-9737-4477", zenodo)
 
     def test_repo_wide_zero_chr36_kural3_compliance(self) -> None:
         violations = []
@@ -87,6 +93,29 @@ class TestDocsAndHygiene(unittest.TestCase):
         self.assertGreaterEqual(len(pub_theorems), 14)
         for thm in pub_theorems:
             self.assertIn(f"#print axioms {thm}", lean_text)
+
+        difc_lean = (REPO_ROOT / "formal" / "ProofGateTrajectoryDIFC.lean").read_text(encoding="utf-8")
+        self.assertNotIn("sorry", difc_lean.lower())
+        self.assertIn("set_option autoImplicit false", difc_lean)
+        self.assertIn("set_option warningAsError true", difc_lean)
+        difc_theorems = re.findall(r"(?m)^theorem\s+([A-Za-z0-9_]+)\b", difc_lean)
+        self.assertGreaterEqual(len(difc_theorems), 15)
+        for thm in difc_theorems:
+            self.assertIn(f"#print axioms {thm}", difc_lean)
+
+    def test_repo_wide_zero_host_path_opsec_leaks(self) -> None:
+        forbidden_prefix = "/" + "home" + "/" + "alp"
+        leaks = []
+        for path in sorted(REPO_ROOT.rglob("*")):
+            if path.is_dir():
+                continue
+            rel = path.relative_to(REPO_ROOT).as_posix()
+            if rel.startswith(".git/") or "__pycache__/" in rel or ".pytest_cache/" in rel:
+                continue
+            txt = path.read_text(encoding="utf-8", errors="ignore")
+            if forbidden_prefix in txt:
+                leaks.append(rel)
+        self.assertEqual(leaks, [], f"Found host path leak in files: {leaks}")
 
 
 if __name__ == "__main__":

@@ -109,6 +109,7 @@ class TestLeancheckerAndMcp(unittest.TestCase):
         self.assertEqual(
             names,
             [
+                "check_trajectory_difc",
                 "proofgate_audit_spec_diff",
                 "proofgate_check_lean",
                 "proofgate_check_substance",

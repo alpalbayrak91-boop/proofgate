@@ -1,6 +1,6 @@
 cff-version: 1.2.0
-message: "If you use ProofGate in academic research or formal verification pipelines, please cite it below."
-title: "ProofGate v1.0.0 Omni-Gate: Lean 4 Faithfulness & Diff Gate, Python AST Verifier, SARIF, SLSA v1.0 DSSE, RFC 6962, and Non-Compensatory Agent Evaluator"
+message: "If you use ProofGate in academic research, AI safety evaluations, or formal verification pipelines, please cite it below."
+title: "ProofGate v2.0.0: Six-Layer Formal Verification, Spec-Gaming Defense, and Multi-Step DIFC Trajectory Security for Autonomous AI Agents"
 authors:
   - family-names: "Albayrak"
     given-names: "Alp"
@@ -8,5 +8,5 @@ authors:
 license: "MIT"
 repository-code: "https://github.com/alpalbayrak91-boop/proofgate"
 url: "https://alpalbayrak91-boop.github.io/proofgate/"
-version: "1.0.0"
-date-released: "2026-11-25"
+version: "2.0.0"
+date-released: "2026-11-26"

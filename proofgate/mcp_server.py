@@ -1,17 +1,19 @@
-"""Optional FastMCP v1.2.0 server exposing ProofGate verification gates cleanly to AI agents."""
+"""Optional FastMCP v2.0.0 server exposing ProofGate verification gates cleanly to AI agents."""
 from __future__ import annotations
 
 import argparse
 import asyncio
 import json
+import os
 import pathlib
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Dict, Mapping, Optional, Sequence
 
 from .lean_gate import check_lean_source
 from .leanchecker_bridge import replay_lean_kernel
 from .sarif_export import export_sarif, findings_from_gate_result
 from .spec_diff_reward_hack_gate import audit_spec_vs_candidate_submission
 from .substance_linter import audit_lean_substance
+from .trajectory_difc_gate import evaluate_trajectory_difc
 
 
 def proofgate_check_lean(
@@ -77,8 +79,37 @@ def proofgate_check_substance(
     )
 
 
+def check_trajectory_difc(
+    trajectory: Mapping[str, Any],
+    macaroon_key_hex: str = "",
+    endorsement_key_hex: str = "",
+    fail_fast: bool = False,
+    emit_sarif: bool = False,
+) -> Dict[str, Any]:
+    """Verify multi-step agent trajectory via Layer 6 DIFC lattice, Macaroon caveats, and schema epoch pinning."""
+    env_m = (os.environ.get("PROOFGATE_MACAROON_KEY_HEX") or "").strip()
+    env_e = (os.environ.get("PROOFGATE_ENDORSEMENT_KEY_HEX") or "").strip()
+    eff_m_hex = env_m or macaroon_key_hex.strip()
+    eff_e_hex = env_e or endorsement_key_hex.strip()
+    m_key = bytes.fromhex(eff_m_hex) if eff_m_hex else None
+    e_key = bytes.fromhex(eff_e_hex) if eff_e_hex else None
+    res = evaluate_trajectory_difc(
+        trajectory,
+        macaroon_key=m_key,
+        endorsement_key=e_key,
+        fail_fast=fail_fast,
+    )
+    out = res.to_dict()
+    if emit_sarif:
+        out["sarif"] = res.to_sarif()
+    return out
+
+
+proofgate_check_trajectory_difc = check_trajectory_difc
+
+
 def create_fastmcp_server() -> Any:
-    """Instantiate FastMCP server with ProofGate tools (lazy-imports `mcp` optional extra)."""
+    """Instantiate FastMCP server with ProofGate v2.0.0 tools (lazy-imports `mcp` optional extra)."""
     try:
         from mcp.server.fastmcp import FastMCP
     except ImportError:
@@ -87,12 +118,13 @@ def create_fastmcp_server() -> Any:
         except ImportError as exc:  # pragma: no cover
             raise RuntimeError("Optional dependency `mcp` is required; install via `pip install proofgate[mcp]`") from exc
 
-    server = FastMCP("proofgate-v1.4")
+    server = FastMCP("proofgate-v2.0")
     server.tool()(proofgate_check_lean)
     server.tool()(proofgate_replay_kernel)
     server.tool()(proofgate_audit_spec_diff)
     server.tool()(proofgate_export_sarif)
     server.tool()(proofgate_check_substance)
+    server.tool()(check_trajectory_difc)
     return server
 
 
@@ -104,12 +136,34 @@ async def _self_test() -> Dict[str, Any]:
     chk = proofgate_check_lean(sample)
     sub = proofgate_check_substance(sample)
     sarif = proofgate_export_sarif("theorem bad : 1 = 1 := by sorry")
+    traj = check_trajectory_difc(
+        {
+            "trajectory_id": "mcp-selftest",
+            "steps": [
+                {
+                    "step_index": 0,
+                    "tool_name": "env_read",
+                    "action_kind": "read_resource",
+                    "source_secrecy_tags": ["SECRET_ENV"],
+                    "source_integrity": "UNTRUSTED_EXTERNAL",
+                },
+                {
+                    "step_index": 1,
+                    "tool_name": "http_post",
+                    "action_kind": "http_post",
+                    "target_domain": "evil.invalid",
+                },
+            ],
+        }
+    )
     return {
         "all_pass": (
-            len(tool_names) == 5
+            len(tool_names) == 6
             and chk["verdict"] == "ACCEPT"
             and sub["verdict"] == "ACCEPT"
             and len(sarif["runs"][0]["results"]) >= 1
+            and traj["verdict"] == "REJECT"
+            and "PG-TRAJ-001" in traj["triggered_rule_ids"]
         ),
         "tool_count": len(tool_names),
         "tools": tool_names,
@@ -117,7 +171,7 @@ async def _self_test() -> Dict[str, Any]:
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    parser = argparse.ArgumentParser(description="ProofGate v1.2.0 FastMCP Verification Server")
+    parser = argparse.ArgumentParser(description="ProofGate v2.0.0 FastMCP Verification Server")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args(argv)
     if args.self_test:

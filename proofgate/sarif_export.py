@@ -66,6 +66,11 @@ _RULE_CATALOG: Dict[str, Tuple[str, str, str, str]] = {
     "REJECT_EVAL_REFEREE": ("PG-EVAL-003", "Cross-family referee gate rejection", "error", "Referee was unreachable, same-family, stale, or rejected the candidate."),
     "REJECT_EVAL_WILSON_LCB": ("PG-EVAL-004", "Fleet Wilson 95% LCB below gate floor", "error", "Aggregate fleet Wilson 95% lower confidence bound fell below policy minimum."),
     "REJECT_EVAL_CUSUM_QUARANTINE": ("PG-EVAL-005", "Page-CUSUM sequential drift quarantine", "error", "Sequential defect/failure drift triggered Page-CUSUM quarantine alarm."),
+    "LETHAL_TRIFECTA_EXFIL": ("PG-TRAJ-001", "Lethal Trifecta unendorsed secret exfiltration", "error", "External sink invoked while secrecy taint is non-empty and integrity is untrusted without valid human declassification endorsement."),
+    "BIBA_CONFUSED_DEPUTY_MUTATION": ("PG-TRAJ-002", "Biba confused-deputy high-integrity mutation", "error", "High-integrity system/CI/IAM/payment mutation attempted below USER_EXPLICIT integrity without verified human endorsement."),
+    "MACAROON_CAPABILITY_VIOLATION": ("PG-TRAJ-003", "Macaroon HMAC capability or caveat violation", "error", "Trajectory step violated active Macaroon contextual caveats, attempted scope rollback/escalation, or carried a tampered HMAC-SHA256 chain."),
+    "MID_TRAJECTORY_SCHEMA_RUGPULL": ("PG-TRAJ-004", "Mid-trajectory MCP tool schema rug-pull", "error", "Tool schema/prompt RFC 8785 JCS SHA-256 mutated mid-trajectory without an explicit TRUSTED_SYSTEM epoch bump."),
+    "KNAPSACK_HORIZON_BUDGET_EXCEEDED": ("PG-TRAJ-005", "Multi-dimensional trajectory horizon budget exceeded", "error", "Cumulative multi-step trajectory cost exceeded configured risk_score, external_bytes, or tool_calls horizon budget."),
 }
 
 
@@ -142,6 +147,8 @@ def rule_id_for_violation(violation_code: str) -> str:
         return "PG-DIFF-999"
     if "EVAL" in violation_code or "CUSUM" in violation_code or "WILSON" in violation_code:
         return "PG-EVAL-999"
+    if "TRAJ" in violation_code or "TRIFECTA" in violation_code or "MACAROON" in violation_code or "BIBA" in violation_code or "RUGPULL" in violation_code:
+        return "PG-TRAJ-999"
     return "PG-LEAN-999"
 
 
@@ -261,7 +268,7 @@ def findings_from_gate_result(
 def export_sarif(
     findings: Sequence[SarifFinding],
     *,
-    tool_version: str = "1.0.0",
+    tool_version: str = "2.0.0",
 ) -> Dict[str, Any]:
     """Export findings as a GitHub Code Scanning / VS Code compliant SARIF v2.1.0 dictionary."""
     rules_by_id: Dict[str, Dict[str, Any]] = {}

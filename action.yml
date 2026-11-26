@@ -5,7 +5,7 @@ branding:
   color: "green"
 inputs:
   mode:
-    description: "Verification mode: check-lean, check-ast, diff-lean, spec-diff, eval-agents"
+    description: "Verification mode: check-lean, check-ast, diff-lean, spec-diff, check-kernel, check-substance, check-trajectory, eval-agents"
     required: true
     default: "check-lean"
   target:

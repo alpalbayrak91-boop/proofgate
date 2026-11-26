@@ -35,9 +35,10 @@ from .muhur_rfc6962 import (
     canonical_json_dumps,
     verify_inclusion_proof,
 )
+from .trajectory_difc_gate import evaluate_trajectory_difc
 
 SERVER_NAME = "proofgate-goose-mcp"
-SERVER_VERSION = "1.3.0"
+SERVER_VERSION = "2.0.0"
 LICENSE_SPDX = "MIT"
 MCP_PROTOCOL_VERSION = "2025-03-26"
 SUPPORTED_PROTOCOL_VERSIONS: frozenset[str] = frozenset({"2024-11-05", "2025-03-26"})
@@ -418,6 +419,21 @@ MCP_TOOLS_SPEC: List[Dict[str, Any]] = [
             },
         },
     },
+    {
+        "name": "check_trajectory_difc",
+        "description": "Layer 6 stateful trajectory security gate: enforces DIFC secrecy/integrity lattice, HMAC-SHA256 Macaroon capability attenuation, JCS tool-schema epoch pinning, and horizon budgets.",
+        "annotations": {"readOnlyHint": True, "idempotentHint": True, "destructiveHint": False, "openWorldHint": False},
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "trajectory": {"type": "object"},
+                "macaroon_key_hex": {"type": "string", "default": ""},
+                "endorsement_key_hex": {"type": "string", "default": ""},
+                "fail_fast": {"type": "boolean", "default": False},
+            },
+            "required": ["trajectory"],
+        },
+    },
 ]
 
 MCP_RESOURCES_SPEC: List[Dict[str, Any]] = [
@@ -467,6 +483,20 @@ def _dispatch_tool(name: str, args: Dict[str, Any]) -> Dict[str, Any]:
             str(args.get("label", "proofgate-goose")),
             list(args.get("items", [])),
         )
+    if name in ("check_trajectory_difc", "proofgate_goose_check_trajectory_difc"):
+        traj = args.get("trajectory")
+        if not isinstance(traj, dict):
+            raise ValueError("trajectory must be a JSON object")
+        env_m = (os.environ.get("PROOFGATE_MACAROON_KEY_HEX") or "").strip()
+        env_e = (os.environ.get("PROOFGATE_ENDORSEMENT_KEY_HEX") or "").strip()
+        m_hex = env_m or str(args.get("macaroon_key_hex", "")).strip()
+        e_hex = env_e or str(args.get("endorsement_key_hex", "")).strip()
+        return evaluate_trajectory_difc(
+            traj,
+            macaroon_key=bytes.fromhex(m_hex) if m_hex else None,
+            endorsement_key=bytes.fromhex(e_hex) if e_hex else None,
+            fail_fast=bool(args.get("fail_fast", False)),
+        ).to_dict()
     raise KeyError(f"UNKNOWN_TOOL:{name}")
 
 

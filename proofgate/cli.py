@@ -1,4 +1,4 @@
-"""CLI entrypoint for ProofGate v1.0.0 Omni-Gate."""
+"""CLI entrypoint for ProofGate v2.0.0 Omni-Gate."""
 from __future__ import annotations
 
 import argparse
@@ -13,10 +13,11 @@ from .ast_gate import check_python_source
 from .diff_gate import diff_lean_sources
 from .lean_gate import check_lean_source
 from .leanchecker_bridge import replay_lean_kernel
-from .muhur_rfc6962 import MerkleTree, canonical_json_bytes
+from .muhur_rfc6962 import MerkleTree, canonical_json_bytes, verify_inclusion_proof
 from .sarif_export import export_sarif, findings_from_gate_result
 from .slsa_provenance import build_in_toto_slsa_statement, dsse_sign_hmac_sha256, verify_slsa_provenance
 from .substance_linter import audit_lean_substance
+from .trajectory_difc_gate import evaluate_trajectory_difc, mint_macaroon
 
 
 def _emit_gate_output(
@@ -36,9 +37,109 @@ def _emit_gate_output(
         print(json.dumps(result_dict, indent=2, ensure_ascii=False))
 
 
+def run_cli_self_test() -> Dict[str, Any]:
+    """Deterministic offline self-test exercising all 6 ProofGate verification layers."""
+    lean_ok = check_lean_source(
+        "set_option autoImplicit false\ntheorem id_nat (n : Nat) : n + 0 = n := rfl\n#print axioms id_nat\n",
+        strict=True,
+    )
+    lean_bad = check_lean_source("theorem bad : 1 = 2 := by sorry\n", strict=True)
+    ast_ok = check_python_source("def add(a, b):\n    return a + b\n")
+    ast_bad = check_python_source("import subprocess\n")
+    diff_ok = diff_lean_sources(
+        "theorem t (a : Nat) : a = a := rfl\n",
+        "theorem t_moved (b : Nat) : b = b := rfl\n",
+    )
+    sub_ok = audit_lean_substance("theorem t (n : Nat) (h : n > 0) : n >= 1 := by omega\n", strict=True)
+
+    mac_key = b"proofgate-selftest-macaroon-key"
+    root_mac = mint_macaroon(
+        mac_key,
+        identifier="selftest-mac",
+        nonce="selftest-nonce-1",
+        root_scopes=["read", "network"],
+    )
+    traj_clean = evaluate_trajectory_difc(
+        {
+            "trajectory_id": "selftest-clean",
+            "root_macaroon": root_mac.to_dict(),
+            "steps": [
+                {
+                    "step_index": 0,
+                    "tool_name": "doc_read",
+                    "action_kind": "read_resource",
+                    "required_scope": "read",
+                    "source_integrity": "USER_EXPLICIT",
+                    "tool_schema": {"name": "doc_read", "description": "Read public doc"},
+                }
+            ],
+        },
+        macaroon_key=mac_key,
+    )
+    traj_trifecta = evaluate_trajectory_difc(
+        {
+            "trajectory_id": "selftest-trifecta",
+            "root_macaroon": root_mac.to_dict(),
+            "steps": [
+                {
+                    "step_index": 0,
+                    "tool_name": "env_read",
+                    "action_kind": "read_resource",
+                    "required_scope": "read",
+                    "source_secrecy_tags": ["SECRET_ENV"],
+                    "source_integrity": "USER_EXPLICIT",
+                },
+                {
+                    "step_index": 1,
+                    "tool_name": "web_fetch",
+                    "action_kind": "read_resource",
+                    "required_scope": "read",
+                    "source_integrity": "UNTRUSTED_EXTERNAL",
+                },
+                {
+                    "step_index": 2,
+                    "tool_name": "http_post",
+                    "action_kind": "http_post",
+                    "required_scope": "network",
+                    "target_domain": "exfil.invalid",
+                },
+            ],
+        },
+        macaroon_key=mac_key,
+    )
+    leaf0 = canonical_json_bytes(traj_trifecta.step_traces[0])
+    proof0 = traj_trifecta.receipt["inclusion_proofs"][0]
+    merkle_ok = verify_inclusion_proof(
+        leaf0,
+        leaf_index=0,
+        tree_size=traj_trifecta.receipt["tree_size"],
+        audit_path_hex=proof0["audit_path"],
+        expected_root_hex=traj_trifecta.receipt["merkle_root"],
+    )
+
+    checks = {
+        "lean_gate": lean_ok.verdict == "ACCEPT" and lean_bad.verdict == "REJECT",
+        "ast_gate": ast_ok.verdict == "ACCEPT" and ast_bad.verdict == "REJECT",
+        "diff_gate": diff_ok.verdict == "ACCEPT",
+        "substance_gate": sub_ok["verdict"] == "ACCEPT",
+        "trajectory_difc_accept": traj_clean.verdict == "ACCEPT",
+        "trajectory_difc_trifecta_reject": (
+            traj_trifecta.verdict == "REJECT"
+            and "PG-TRAJ-001" in traj_trifecta.triggered_rule_ids
+        ),
+        "rfc6962_trajectory_receipt": merkle_ok,
+    }
+    return {
+        "version": "2.0.0",
+        "all_pass": all(checks.values()),
+        "checks": checks,
+    }
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    parser = argparse.ArgumentParser(prog="proofgate", description="ProofGate v1.0.0 Omni-Gate Verifier")
-    sub = parser.add_subparsers(dest="cmd", required=True)
+    parser = argparse.ArgumentParser(prog="proofgate", description="ProofGate v2.0.0 Omni-Gate Verifier")
+    parser.add_argument("--self-test", action="store_true", help="Run built-in 6-layer deterministic self-test")
+    sub = parser.add_subparsers(dest="cmd", required=False)
 
     p_lean = sub.add_parser("check-lean", help="Audit a Lean 4 file")
     p_lean.add_argument("path", type=pathlib.Path)
@@ -95,7 +196,27 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     p_sub.add_argument("--strict-substance", action="store_true")
     p_sub.add_argument("--format", choices=("json", "sarif", "junit"), default="json")
 
+    p_traj = sub.add_parser(
+        "check-trajectory",
+        help="Verify multi-step agent trajectory via Layer 6 DIFC + Macaroon + Schema Epoch gate",
+    )
+    p_traj.add_argument("trajectory_json", type=pathlib.Path)
+    p_traj.add_argument("--sarif", type=pathlib.Path, default=None, help="Optional path to write SARIF v2.1.0 output")
+    p_traj.add_argument("--receipt", type=pathlib.Path, default=None, help="Optional path to write RFC 6962 Merkle receipt JSON")
+    p_traj.add_argument("--macaroon-key-hex", default=None, help="Optional hex HMAC root key for Macaroon verification")
+    p_traj.add_argument("--endorsement-key-hex", default=None, help="Optional hex HMAC key for human declassification endorsements")
+    p_traj.add_argument("--fail-fast", action="store_true", help="Stop evaluation on first rule violation")
+    p_traj.add_argument("--format", choices=("json", "sarif", "junit"), default="json")
+
     args = parser.parse_args(argv)
+
+    if args.self_test:
+        st = run_cli_self_test()
+        print(json.dumps(st, indent=2, ensure_ascii=False))
+        return 0 if st["all_pass"] else 1
+
+    if not args.cmd:
+        parser.error("the following arguments are required: cmd")
 
     if args.cmd == "check-lean":
         src = args.path.read_text(encoding="utf-8")
@@ -264,6 +385,35 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             suite_name="ProofGate.SubstanceLinter",
         )
         return 0 if res_dict["verdict"] == "ACCEPT" else 1
+
+    if args.cmd == "check-trajectory":
+        raw_text = args.trajectory_json.read_text(encoding="utf-8")
+        traj_doc = json.loads(raw_text)
+        m_key = bytes.fromhex(args.macaroon_key_hex) if args.macaroon_key_hex else None
+        e_key = bytes.fromhex(args.endorsement_key_hex) if args.endorsement_key_hex else None
+        t_res = evaluate_trajectory_difc(
+            traj_doc,
+            macaroon_key=m_key,
+            endorsement_key=e_key,
+            fail_fast=args.fail_fast,
+            source_text=raw_text,
+        )
+        t_dict = t_res.to_dict()
+        if args.sarif is not None:
+            sarif_obj = t_res.to_sarif(artifact_uri=str(args.trajectory_json), source=raw_text)
+            args.sarif.parent.mkdir(parents=True, exist_ok=True)
+            args.sarif.write_text(json.dumps(sarif_obj, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        if args.receipt is not None:
+            args.receipt.parent.mkdir(parents=True, exist_ok=True)
+            args.receipt.write_text(json.dumps(t_res.receipt, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        _emit_gate_output(
+            t_dict,
+            fmt=args.format,
+            artifact_uri=str(args.trajectory_json),
+            source=raw_text,
+            suite_name="ProofGate.TrajectoryDIFC",
+        )
+        return 0 if t_res.verdict == "ACCEPT" else 1
 
     return 2
 

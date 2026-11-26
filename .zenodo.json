@@ -1,7 +1,7 @@
 {
-  "title": "ProofGate v1.0.0 Omni-Gate: Non-Compensatory Meta-Auditing, Lean 4 Faithfulness & PR Diff Gate, Python AST Verifier, SARIF v2.1.0, SLSA v1.0 DSSE, and RFC 6962 Toolkit",
+  "title": "ProofGate v2.0.0: Six-Layer Formal Verification, Lean 4 Spec-Gaming Defense, and Multi-Step DIFC Trajectory Security for Autonomous AI Agents",
   "upload_type": "software",
-  "description": "Zero-dependency MIT verification toolkit unifying Lean 4 faithfulness/vacuity/diff verification, Python AST safety, SARIF v2.1.0 export, RFC 8785 JCS + RFC 6962 inclusion/consistency Merkle logs, in-toto SLSA v1.0 DSSEv1 attestations, and non-compensatory multi-agent evaluation with Pure-Init Lean 4 soundness proofs.",
+  "description": "Zero-dependency MIT verification and AI agent trajectory security suite uniting Lean 4 faithfulness/vacuity/substance/spec-diff/kernel-replay verification, Decentralized Information-Flow Control (DIFC) + HMAC-SHA256 Macaroon capability attenuation + MCP tool-schema epoch pinning, Python AST sandboxing, SARIF v2.1.0 export, RFC 8785 JCS + RFC 6962 inclusion/consistency Merkle logs, in-toto SLSA v1.0 DSSEv1 attestations, non-compensatory multi-agent evaluation, and Pure-Init Lean 4 soundness proofs.",
   "creators": [
     {
       "name": "Albayrak, Alp",
@@ -12,7 +12,12 @@
   "keywords": [
     "Lean 4",
     "formal verification",
-    "multi-agent auditing",
+    "AI safety",
+    "agent trajectory security",
+    "DIFC",
+    "Macaroons",
+    "Model Context Protocol",
+    "specification gaming",
     "Python AST",
     "SARIF",
     "SLSA",
@@ -23,6 +28,6 @@
     "Merkle tree"
   ],
   "license": "MIT",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "access_right": "open"
 }
