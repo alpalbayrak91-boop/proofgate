@@ -47,13 +47,16 @@ from .spec_diff_reward_hack_gate import (
     CONCRETE_CORE_TYPES,
     FORBIDDEN_ESCAPE_TOKENS,
     PROTECTED_TYPECLASSES,
+    STANDARD_LEAN_AXIOMS,
     LeanDecl,
+    audit_kernel_axioms,
     audit_spec_vs_candidate_submission,
     parse_lean_declarations,
+    parse_print_axioms_output,
     strip_lean_comments,
 )
 
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
 __all__ = [
     "ASTGateResult",
@@ -68,9 +71,11 @@ __all__ = [
     "PROTECTED_TYPECLASSES",
     "PageCusumDetector",
     "SLSAVerificationResult",
+    "STANDARD_LEAN_AXIOMS",
     "SarifFinding",
     "__version__",
     "alpha_canonicalize_signature",
+    "audit_kernel_axioms",
     "audit_spec_vs_candidate_submission",
     "build_consistency_proof",
     "build_in_toto_slsa_statement",
@@ -97,6 +102,7 @@ __all__ = [
     "lexicographic_4gate_bps",
     "lexicographic_6tier_score",
     "parse_lean_declarations",
+    "parse_print_axioms_output",
     "replay_lean_kernel",
     "span_to_utf16_region",
     "strip_lean_comments",

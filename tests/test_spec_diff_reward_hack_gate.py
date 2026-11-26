@@ -5,8 +5,11 @@ import pathlib
 import unittest
 
 from proofgate import (
+    STANDARD_LEAN_AXIOMS,
+    audit_kernel_axioms,
     audit_spec_vs_candidate_submission,
     parse_lean_declarations,
+    parse_print_axioms_output,
     strip_lean_comments,
 )
 
@@ -99,6 +102,42 @@ class TestSpecDiffRewardHackGate(unittest.TestCase):
         self.assertIn("workflow_dispatch:", ci_text)
         self.assertIn("push:", ci_text)
         self.assertIn("pull_request:", ci_text)
+
+    def test_kernel_axiom_whitelist_and_metaprogramming_smuggling_rejection(self) -> None:
+        # agy 2026-11-26: SafeVerify-style kernel axiom audit catches sorryAx/ofReduceBool/custom axioms
+        clean_out = (
+            "'double_comm' depends on axioms: [propext, Classical.choice, Quot.sound]\n"
+            "'poly_ops' does not depend on any axioms\n"
+        )
+        parsed = parse_print_axioms_output(clean_out)
+        self.assertEqual(parsed["double_comm"], set(STANDARD_LEAN_AXIOMS))
+        self.assertEqual(parsed["poly_ops"], set())
+
+        ok_res = audit_kernel_axioms(["double_comm", "poly_ops"], clean_out)
+        self.assertEqual(ok_res["verdict"], "KERNEL_AXIOMS_PASS")
+        self.assertEqual(ok_res["reasons"], [])
+
+        smuggled_out = (
+            "'double_comm' depends on axioms: [propext, Lean.ofReduceBool, sorryAx, EvilAxiom]\n"
+        )
+        bad_res = audit_kernel_axioms(["double_comm", "missing_thm"], smuggled_out)
+        self.assertEqual(bad_res["verdict"], "REJECT_REWARD_HACKING")
+        self.assertIn("REJECT_UNAPPROVED_KERNEL_AXIOM:Lean.ofReduceBool@double_comm", bad_res["reasons"])
+        self.assertIn("REJECT_UNAPPROVED_KERNEL_AXIOM:sorryAx@double_comm", bad_res["reasons"])
+        self.assertIn("REJECT_UNAPPROVED_KERNEL_AXIOM:EvilAxiom@double_comm", bad_res["reasons"])
+        self.assertIn("REJECT_MISSING_AXIOM_AUDIT:missing_thm", bad_res["reasons"])
+
+        baseline = "theorem clean_t (n : Nat) : n = n := by sorry\n"
+        candidate = "theorem clean_t (n : Nat) : n = n := rfl\n"
+        combined_ok = audit_spec_vs_candidate_submission(
+            baseline, candidate, print_axioms_stdout="'clean_t' does not depend on any axioms\n"
+        )
+        self.assertEqual(combined_ok["verdict"], "FAITHFUL_PASS")
+        combined_bad = audit_spec_vs_candidate_submission(
+            baseline, candidate, print_axioms_stdout="'clean_t' depends on axioms: [propext, sorryAx]\n"
+        )
+        self.assertEqual(combined_bad["verdict"], "REJECT_REWARD_HACKING")
+        self.assertIn("REJECT_UNAPPROVED_KERNEL_AXIOM:sorryAx@clean_t", combined_bad["reasons"])
 
 
 if __name__ == "__main__":
