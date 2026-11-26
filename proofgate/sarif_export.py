@@ -45,6 +45,8 @@ _RULE_CATALOG: Dict[str, Tuple[str, str, str, str]] = {
     "REJECT_VACUOUS_HYPOTHESIS": ("PG-LEAN-011", "Vacuous theorem with contradictory hypotheses", "error", "Theorem hypotheses are mutually contradictory (e.g. x < 0 and x > 5 or P and not P)."),
     "REJECT_UNTERMINATED_LEXER": ("PG-LEAN-012", "Unterminated comment/string or Trojan Unicode", "error", "Unterminated block comment/string or invisible bidirectional Unicode character detected."),
     "REJECT_UNSAFE_LEAN_ATTRIBUTE": ("PG-LEAN-013", "Unsafe Lean attribute or opaque/unsafe decl", "error", "Unsafe declaration, @[extern], @[implemented_by], @[csimp], or core typeclass hijack detected."),
+    "REJECT_LEAN_COMPILE": ("PG-LEAN-014", "Lean --trust=0 compiler rejection", "error", "Lean 4 compiler (--trust=0 -DwarningAsError=true) rejected the module."),
+    "REJECT_LEANCHECKER_REPLAY": ("PG-LEAN-015", "leanchecker kernel replay rejection", "error", "Independent Lean C++ leanchecker .olean kernel replay rejected the module."),
     "REJECT_AST_SYNTAX_ERROR": ("PG-AST-001", "Python syntax error in AST gate", "error", "Python source failed ast.parse verification."),
     "REJECT_AST_FORBIDDEN_IMPORT": ("PG-AST-002", "Forbidden Python module import", "error", "Restricted system/IO/FFI module imported inside sandboxed Python operator."),
     "REJECT_AST_FORBIDDEN_BUILTIN": ("PG-AST-003", "Forbidden dynamic Python builtin", "error", "Dynamic code execution or reflection builtin (eval/exec/open/getattr) detected."),

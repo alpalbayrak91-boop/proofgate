@@ -15,6 +15,7 @@ from .agent_eval import (
 from .ast_gate import ASTGateResult, check_python_source
 from .diff_gate import LeanDiffResult, alpha_canonicalize_signature, diff_lean_sources, extract_theorem_specs
 from .lean_gate import LeanGateResult, check_lean_source, lex_lean_source, strip_lean_comments_and_strings
+from .leanchecker_bridge import KernelReplayResult, LeanToolchain, discover_lean_toolchain, replay_lean_kernel
 from .muhur_rfc6962 import (
     MerkleTree,
     build_consistency_proof,
@@ -52,15 +53,17 @@ from .spec_diff_reward_hack_gate import (
     strip_lean_comments,
 )
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 __all__ = [
     "ASTGateResult",
     "CONCRETE_CORE_TYPES",
     "FORBIDDEN_ESCAPE_TOKENS",
+    "KernelReplayResult",
     "LeanDecl",
     "LeanDiffResult",
     "LeanGateResult",
+    "LeanToolchain",
     "MerkleTree",
     "PROTECTED_TYPECLASSES",
     "PageCusumDetector",
@@ -77,6 +80,7 @@ __all__ = [
     "check_python_source",
     "compute_partial_fingerprints",
     "diff_lean_sources",
+    "discover_lean_toolchain",
     "dsse_pae",
     "dsse_sign_hmac_sha256",
     "dsse_verify_hmac_sha256",
@@ -93,6 +97,7 @@ __all__ = [
     "lexicographic_4gate_bps",
     "lexicographic_6tier_score",
     "parse_lean_declarations",
+    "replay_lean_kernel",
     "span_to_utf16_region",
     "strip_lean_comments",
     "strip_lean_comments_and_strings",

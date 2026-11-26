@@ -12,6 +12,7 @@ from .agent_eval import evaluate_fleet_runs, export_junit_xml, export_promptfoo_
 from .ast_gate import check_python_source
 from .diff_gate import diff_lean_sources
 from .lean_gate import check_lean_source
+from .leanchecker_bridge import replay_lean_kernel
 from .muhur_rfc6962 import MerkleTree, canonical_json_bytes
 from .sarif_export import export_sarif, findings_from_gate_result
 from .slsa_provenance import build_in_toto_slsa_statement, dsse_sign_hmac_sha256, verify_slsa_provenance
@@ -79,6 +80,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     p_eval.add_argument("--min-wilson-lcb-bps", type=int, default=7000)
     p_eval.add_argument("--cusum-threshold", type=float, default=1.5)
     p_eval.add_argument("--format", choices=("json", "sarif", "junit", "promptfoo"), default="json")
+
+    p_kern = sub.add_parser("check-kernel", help="Compile Lean 4 with --trust=0 and replay via C++ leanchecker")
+    p_kern.add_argument("path", type=pathlib.Path)
+    p_kern.add_argument("--fresh", action="store_true", help="Pass --fresh to leanchecker (full stdlib replay, higher timeout)")
+    p_kern.add_argument("--require-toolchain", action="store_true", help="Fail closed if lean/leanchecker binaries are unavailable")
+    p_kern.add_argument("--also-static-gate", action="store_true", help="Run ProofGate static Lean faithfulness gate in addition to kernel replay")
+    p_kern.add_argument("--format", choices=("json", "sarif", "junit"), default="json")
 
     args = parser.parse_args(argv)
 
@@ -202,6 +210,37 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         else:
             _emit_gate_output(res, fmt=args.format, artifact_uri=str(args.input_json), suite_name="ProofGate.AgentEval")
         return 0 if res["verdict"] == "ACCEPT" else 1
+
+    if args.cmd == "check-kernel":
+        res_obj = replay_lean_kernel(
+            args.path,
+            fresh=args.fresh,
+            require_toolchain=args.require_toolchain,
+        )
+        out_dict = res_obj.to_dict()
+        src = args.path.read_text(encoding="utf-8") if args.path.is_file() else ""
+        if args.also_static_gate and args.path.is_file():
+            s_res = check_lean_source(
+                src,
+                require_print_axioms=True,
+                require_auto_implicit_false=True,
+                check_vacuity=True,
+                strict=True,
+            ).to_dict()
+            out_dict["static_gate"] = s_res
+            if s_res.get("verdict") != "ACCEPT":
+                out_dict["verdict"] = "REJECT"
+                out_dict["primary_code"] = str(s_res.get("primary_code") or out_dict["primary_code"])
+                out_dict["violations"] = list(dict.fromkeys([*out_dict.get("violations", []), *s_res.get("violations", [])]))
+                out_dict["findings"] = [*out_dict.get("findings", []), *s_res.get("findings", [])]
+        _emit_gate_output(
+            out_dict,
+            fmt=args.format,
+            artifact_uri=str(args.path),
+            source=src,
+            suite_name="ProofGate.KernelReplay",
+        )
+        return 0 if out_dict["verdict"] in ("ACCEPT", "SKIPPED_NO_TOOLCHAIN") else 1
 
     return 2
 

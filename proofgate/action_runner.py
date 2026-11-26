@@ -46,6 +46,11 @@ def run_from_env(argv: Optional[Sequence[str]] = None) -> int:
 
     if mode == "check-lean" and strict:
         args.append("--strict")
+    if mode == "check-kernel":
+        if (os.environ.get("INPUT_FRESH") or "").strip().lower() in ("1", "true", "yes"):
+            args.append("--fresh")
+        if strict:
+            args.append("--also-static-gate")
     args.extend(["--format", fmt])
     return cli_main(args)
 
