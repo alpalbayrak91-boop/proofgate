@@ -21,6 +21,7 @@ from proofgate.mcp_server import (
     create_fastmcp_server,
     proofgate_audit_spec_diff,
     proofgate_check_lean,
+    proofgate_check_substance,
     proofgate_export_sarif,
     proofgate_replay_kernel,
 )
@@ -101,7 +102,7 @@ class TestLeancheckerAndMcp(unittest.TestCase):
         self.assertEqual(data["verdict"], "ACCEPT")
         self.assertEqual(data["static_gate"]["verdict"], "ACCEPT")
 
-    def test_fastmcp_server_registers_and_executes_4_tools(self) -> None:
+    def test_fastmcp_server_registers_and_executes_5_tools(self) -> None:
         srv = create_fastmcp_server()
         tools = asyncio.run(srv.list_tools())
         names = sorted(t.name for t in tools)
@@ -110,12 +111,14 @@ class TestLeancheckerAndMcp(unittest.TestCase):
             [
                 "proofgate_audit_spec_diff",
                 "proofgate_check_lean",
+                "proofgate_check_substance",
                 "proofgate_export_sarif",
                 "proofgate_replay_kernel",
             ],
         )
-        ok_src = "set_option autoImplicit false\ntheorem p : 2 + 2 = 4 := rfl\n#print axioms p\n"
+        ok_src = "set_option autoImplicit false\ntheorem p (n : Nat) : n + 0 = n := rfl\n#print axioms p\n"
         self.assertEqual(proofgate_check_lean(ok_src)["verdict"], "ACCEPT")
+        self.assertEqual(proofgate_check_substance(ok_src)["verdict"], "ACCEPT")
         sarif = proofgate_export_sarif("theorem bad : 1 = 2 := by sorry")
         self.assertEqual(sarif["runs"][0]["results"][0]["ruleId"], "PG-LEAN-001")
         diff_ok = proofgate_audit_spec_diff(

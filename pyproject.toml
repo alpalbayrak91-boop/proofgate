@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "proofgate"
-version = "1.3.0"
+version = "1.4.0"
 description = "Zero-dependency Omni-Gate verification toolkit: Lean 4 faithfulness/vacuity/diff/kernel-replay gates, Python AST verifier, SARIF v2.1.0, RFC 6962/8785, SLSA v1.0 DSSE, optional FastMCP server, and non-compensatory multi-agent evaluation"
 readme = "README.md"
 license = { text = "MIT" }

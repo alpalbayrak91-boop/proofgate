@@ -16,6 +16,7 @@ from .leanchecker_bridge import replay_lean_kernel
 from .muhur_rfc6962 import MerkleTree, canonical_json_bytes
 from .sarif_export import export_sarif, findings_from_gate_result
 from .slsa_provenance import build_in_toto_slsa_statement, dsse_sign_hmac_sha256, verify_slsa_provenance
+from .substance_linter import audit_lean_substance
 
 
 def _emit_gate_output(
@@ -87,6 +88,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     p_kern.add_argument("--require-toolchain", action="store_true", help="Fail closed if lean/leanchecker binaries are unavailable")
     p_kern.add_argument("--also-static-gate", action="store_true", help="Run ProofGate static Lean faithfulness gate in addition to kernel replay")
     p_kern.add_argument("--format", choices=("json", "sarif", "junit"), default="json")
+
+    p_sub = sub.add_parser("check-substance", help="Audit Lean 4 theorems for mathematical substance vs trivial filler")
+    p_sub.add_argument("path", type=pathlib.Path)
+    p_sub.add_argument("--min-substance-bps", type=int, default=5000)
+    p_sub.add_argument("--strict-substance", action="store_true")
+    p_sub.add_argument("--format", choices=("json", "sarif", "junit"), default="json")
 
     args = parser.parse_args(argv)
 
@@ -241,6 +248,22 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             suite_name="ProofGate.KernelReplay",
         )
         return 0 if out_dict["verdict"] in ("ACCEPT", "SKIPPED_NO_TOOLCHAIN") else 1
+
+    if args.cmd == "check-substance":
+        src = args.path.read_text(encoding="utf-8")
+        res_dict = audit_lean_substance(
+            src,
+            min_substance_bps=args.min_substance_bps,
+            strict=args.strict_substance,
+        )
+        _emit_gate_output(
+            res_dict,
+            fmt=args.format,
+            artifact_uri=str(args.path),
+            source=src,
+            suite_name="ProofGate.SubstanceLinter",
+        )
+        return 0 if res_dict["verdict"] == "ACCEPT" else 1
 
     return 2
 

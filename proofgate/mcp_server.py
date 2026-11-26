@@ -11,6 +11,7 @@ from .lean_gate import check_lean_source
 from .leanchecker_bridge import replay_lean_kernel
 from .sarif_export import export_sarif, findings_from_gate_result
 from .spec_diff_reward_hack_gate import audit_spec_vs_candidate_submission
+from .substance_linter import audit_lean_substance
 
 
 def proofgate_check_lean(
@@ -63,18 +64,35 @@ def proofgate_export_sarif(
     return export_sarif(findings)
 
 
+def proofgate_check_substance(
+    lean_source: str,
+    min_substance_bps: int = 5000,
+    strict_substance: bool = False,
+) -> Dict[str, Any]:
+    """Audit Lean 4 theorems for mathematical substance vs binderless decide/unfold/tautology filler."""
+    return audit_lean_substance(
+        lean_source,
+        min_substance_bps=min_substance_bps,
+        strict=strict_substance,
+    )
+
+
 def create_fastmcp_server() -> Any:
     """Instantiate FastMCP server with ProofGate tools (lazy-imports `mcp` optional extra)."""
     try:
         from mcp.server.fastmcp import FastMCP
-    except ImportError as exc:  # pragma: no cover
-        raise RuntimeError("Optional dependency `mcp` is required; install via `pip install proofgate[mcp]`") from exc
+    except ImportError:
+        try:
+            from mcp.server.mcpserver import MCPServer as FastMCP
+        except ImportError as exc:  # pragma: no cover
+            raise RuntimeError("Optional dependency `mcp` is required; install via `pip install proofgate[mcp]`") from exc
 
-    server = FastMCP("proofgate-v1.2")
+    server = FastMCP("proofgate-v1.4")
     server.tool()(proofgate_check_lean)
     server.tool()(proofgate_replay_kernel)
     server.tool()(proofgate_audit_spec_diff)
     server.tool()(proofgate_export_sarif)
+    server.tool()(proofgate_check_substance)
     return server
 
 
@@ -82,11 +100,17 @@ async def _self_test() -> Dict[str, Any]:
     srv = create_fastmcp_server()
     tools = await srv.list_tools()
     tool_names = sorted(t.name for t in tools)
-    sample = "set_option autoImplicit false\ntheorem ok_thm : 1 + 1 = 2 := rfl\n#print axioms ok_thm\n"
+    sample = "set_option autoImplicit false\ntheorem ok_thm (n : Nat) : n + 0 = n := rfl\n#print axioms ok_thm\n"
     chk = proofgate_check_lean(sample)
+    sub = proofgate_check_substance(sample)
     sarif = proofgate_export_sarif("theorem bad : 1 = 1 := by sorry")
     return {
-        "all_pass": len(tool_names) == 4 and chk["verdict"] == "ACCEPT" and len(sarif["runs"][0]["results"]) >= 1,
+        "all_pass": (
+            len(tool_names) == 5
+            and chk["verdict"] == "ACCEPT"
+            and sub["verdict"] == "ACCEPT"
+            and len(sarif["runs"][0]["results"]) >= 1
+        ),
         "tool_count": len(tool_names),
         "tools": tool_names,
     }
