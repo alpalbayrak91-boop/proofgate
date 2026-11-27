@@ -11,6 +11,25 @@ Every core gate in `ProofGate` runs purely on the Python 3.10+ standard library 
 
 ---
 
+## 5-Repository Verifiable Agent Stack Quickstart (For Grant & Technical Reviewers)
+
+Run a deterministic **10-step autonomous AI R&D / coding agent episode** across all five zero-dependency verification layers in `< 0.5 seconds` (`~22 ms`, `0` external packages, `0` network calls) and verify the unified **RFC 8785 JCS + RFC 6962 Merkle** transparency bundle (`docs/VERIFIABLE_AGENT_STACK_ARCHITECTURE.md`):
+
+```bash
+python3 examples/verifiable_agent_stack_e2e.py              # Human-readable 10-step audit & Merkle report
+python3 examples/verifiable_agent_stack_e2e.py --json       # Canonical JSON transparency bundle + SARIF v2.1.0 summary
+python3 examples/verifiable_agent_stack_e2e.py --selftest   # Fast deterministic invariant self-check (exit 0)
+```
+
+- **Layer 1 — Pre-Execution Supply-Chain Gate ([`wheelcap` v2.0.0](https://github.com/alpalbayrak91-boop/wheelcap)):** Differential Git-to-`.whl` capability verifier (`ALLOW` clean wheel; `BLOCK` `.pth` auto-exec + AST-folded `os.environ` exfiltration).
+- **Layer 2 — Upstream MCP/API Drift Gate ([`drift-watch` v4.0.0 protocol](https://github.com/alpalbayrak91-boop/drift-watch)):** Modular Weyl polling + two-probe corroboration + Page-CUSUM (`ALLOW` transient 1-tick HTTP `429`; `QUARANTINE` silent MCP contract mutation).
+- **Layer 3 — Bitemporal Belief & Anti-Crowding Memory ([`temporal-gaba-memory` v1.0.0](https://github.com/alpalbayrak91-boop/temporal-gaba-memory)):** 2D `[valid, tx)` AGM `revise_split` + Chernoff over-fetch (`StaleTrap@1 = 0.00%` on revoked partner policy under `m = 15` stale v1 paraphrases).
+- **Layer 4 — Lookahead & Contamination Gate ([`leakspec-cli` v2.7.0](https://github.com/alpalbayrak91-boop/leakspec-cli)):** Lopez de Prado post-horizon purged `CPCV(6, 2)` (`LS-CPCV-001`) + 8-byte Pigeonhole `SimHash64` benchmark-contamination screening.
+- **Layer 5 — Stateful DIFC, HMAC Macaroons & Lean 4 Gate ([`proofgate` v2.0.0](https://github.com/alpalbayrak91-boop/proofgate)):** Live `evaluate_trajectory(...)` with server-held HMAC keys blocking indirect prompt-injection exfiltration (`PG-TRAJ-001..003`) and `sorryAx`/`native_decide` proof gaming (`PG-LEAN-001..006`).
+- **Formal Math Companion ([`erdos642-ces` — `PALOMAR-2026-11-26-000062`](https://github.com/alpalbayrak91-boop/erdos642-ces)):** Machine-checked Lean 4 proof of the Chen–Erdős–Staton graph bound verified by `Lean`, `NanoDa`, and `con-ron` in the Palomar Registry.
+
+---
+
 ## Six-Layer Verification Architecture (`proofgate` v2.0.0)
 
 | Layer | Modules & CLI / MCP Entrypoints | Threat Class Closed | Mathematical / Standards Grounding |

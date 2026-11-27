@@ -1583,6 +1583,10 @@ def evaluate_trajectory_difc(
     )
 
 
+# Canonical alias for cross-stack callers importing evaluate_trajectory directly.
+evaluate_trajectory = evaluate_trajectory_difc
+
+
 def evaluate_stateless_baseline(trajectory: Mapping[str, Any]) -> Dict[str, Any]:
     """Stateless per-step pattern/allowlist guardrail baseline (memoryless across trajectory steps).
 
