@@ -15,8 +15,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-      - name: Run unit tests
+      - name: Run zero-dependency core tests
         run: python -W error::DeprecationWarning -m unittest discover -s tests -v
+      - name: Install optional MCP extra and verify FastMCP server
+        run: |
+          python -m pip install --quiet -e ".[mcp]"
+          python -W error::DeprecationWarning -m unittest tests.test_leanchecker_and_mcp -v
+        env:
+          PROOFGATE_REQUIRE_MCP_TESTS: "1"
 
   unit-tests-py311:
     runs-on: ubuntu-latest
@@ -25,8 +31,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Run unit tests
+      - name: Run zero-dependency core tests
         run: python -W error::DeprecationWarning -m unittest discover -s tests -v
+      - name: Install optional MCP extra and verify FastMCP server
+        run: |
+          python -m pip install --quiet -e ".[mcp]"
+          python -W error::DeprecationWarning -m unittest tests.test_leanchecker_and_mcp -v
+        env:
+          PROOFGATE_REQUIRE_MCP_TESTS: "1"
 
   unit-tests-py312:
     runs-on: ubuntu-latest
@@ -35,5 +47,28 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Run unit tests
+      - name: Run zero-dependency core tests
         run: python -W error::DeprecationWarning -m unittest discover -s tests -v
+      - name: Install optional MCP extra and verify FastMCP server
+        run: |
+          python -m pip install --quiet -e ".[mcp]"
+          python -W error::DeprecationWarning -m unittest tests.test_leanchecker_and_mcp -v
+        env:
+          PROOFGATE_REQUIRE_MCP_TESTS: "1"
+
+  lean-kernel-replay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Lean 4.36.0 toolchain via elan
+        run: curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain leanprover/lean4:v4.36.0 --no-modify-path
+      - name: Install optional MCP extra
+        run: python -m pip install --quiet -e ".[mcp]"
+      - name: Run full suite with real Lean 4 + C++ leanchecker replay
+        run: python -W error::DeprecationWarning -m unittest discover -s tests -v
+        env:
+          PROOFGATE_REQUIRE_LEAN_TESTS: "1"
+          PROOFGATE_REQUIRE_MCP_TESTS: "1"
