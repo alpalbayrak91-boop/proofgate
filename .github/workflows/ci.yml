@@ -64,7 +64,11 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install Lean 4.36.0 toolchain via elan
-        run: curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain leanprover/lean4:v4.36.0 --no-modify-path
+        run: |
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none --no-modify-path
+          ~/.elan/bin/elan toolchain install leanprover/lean4:v4.36.0
+          ~/.elan/bin/elan default leanprover/lean4:v4.36.0
+          ~/.elan/bin/lean --version
       - name: Install optional MCP extra
         run: python -m pip install --quiet -e ".[mcp]"
       - name: Run full suite with real Lean 4 + C++ leanchecker replay
