@@ -141,7 +141,10 @@ def replay_lean_kernel(
 
         env = dict(os.environ)
         existing_lp = env.get("LEAN_PATH", "")
-        env["LEAN_PATH"] = f"{tmpdir}:{tc.stdlib_dir}" + (f":{existing_lp}" if existing_lp else "")
+        env["LEAN_PATH"] = f"{tmpdir}{os.pathsep}{tc.stdlib_dir}" + (f"{os.pathsep}{existing_lp}" if existing_lp else "")
+        tc_bin_dir = str(pathlib.Path(tc.lean_bin).parent)
+        existing_path = env.get("PATH", "")
+        env["PATH"] = f"{tc_bin_dir}{os.pathsep}{existing_path}" if existing_path else tc_bin_dir
 
         compile_cmd = [
             tc.lean_bin,
