@@ -80,6 +80,18 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     p_eval.add_argument("--cusum-threshold", type=float, default=1.5)
     p_eval.add_argument("--format", choices=("json", "sarif", "junit", "promptfoo"), default="json")
 
+
+    p_g29 = sub.add_parser(
+        "check-g29-claimcert",
+        help="Audit Lean 4 COC DAG, Swarm Quarantine Redaction, Exposure Predictor & Vendi VS_2/VAS_2 (SARIF v2.1.0)",
+    )
+    p_g29.add_argument("path", nargs="?", default=None, type=pathlib.Path)
+    p_g29.add_argument("--self-test", action="store_true", help="Run canonical clean Gate 2.9 COC + Vendi self-test")
+    p_g29.add_argument("--quarantine-demo", action="store_true", help="Run adversarial quarantine redaction demo returning exit code 1")
+    p_g29.add_argument("--min-vs2", type=float, default=3.0, help="Minimum canonical Vendi VS_2 floor for AST portfolios")
+    p_g29.add_argument("--sarif-out", type=pathlib.Path, default=None, help="Optional OASIS SARIF v2.1.0 output file path")
+    p_g29.add_argument("--format", choices=("json", "sarif", "junit"), default="json")
+
     args = parser.parse_args(argv)
 
     if args.cmd == "check-lean":
@@ -202,6 +214,48 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         else:
             _emit_gate_output(res, fmt=args.format, artifact_uri=str(args.input_json), suite_name="ProofGate.AgentEval")
         return 0 if res["verdict"] == "ACCEPT" else 1
+
+
+    if args.cmd == "check-g29-claimcert":
+        from .g29_claimcert_quarantine_sarif_gate import (
+            audit_g29_claimcert_bundle,
+            build_g29_quarantine_demo_bundle,
+            build_g29_selftest_bundle,
+            export_g29_claimcert_sarif_v210,
+            strict_json_loads_g29,
+        )
+
+        if args.quarantine_demo:
+            g29_obj = build_g29_quarantine_demo_bundle()
+            g29_uri = "formal/g29_quarantine_demo.lean"
+        elif args.self_test or args.path is None:
+            g29_obj = build_g29_selftest_bundle()
+            g29_uri = "formal/g29_selftest_coc.lean"
+        else:
+            raw_g29 = args.path.read_text(encoding="utf-8")
+            if args.path.suffix.lower() == ".json":
+                g29_obj = strict_json_loads_g29(raw_g29)
+                g29_uri = str(g29_obj.get("artifact_uri", args.path.name))
+            else:
+                g29_obj = {"lean_source": raw_g29, "artifact_uri": args.path.name}
+                g29_uri = args.path.name
+        res_g29 = audit_g29_claimcert_bundle(
+            g29_obj,
+            default_uri=g29_uri,
+            min_vs2=args.min_vs2,
+        )
+        sarif_g29 = export_g29_claimcert_sarif_v210(res_g29, artifact_uri=g29_uri)
+        if args.sarif_out is not None:
+            args.sarif_out.parent.mkdir(parents=True, exist_ok=True)
+            sarif_txt = json.dumps(sarif_g29, indent=2, ensure_ascii=False)
+            args.sarif_out.write_text(sarif_txt + "\n", encoding="utf-8")
+        if args.format == "sarif":
+            print(json.dumps(sarif_g29, indent=2, ensure_ascii=False))
+        elif args.format == "junit":
+            print(export_junit_xml(res_g29, suite_name="ProofGate.G29ClaimCertQuarantineGate"))
+        else:
+            print(json.dumps(res_g29, indent=2, ensure_ascii=False))
+        return 0 if res_g29.get("verdict") == "ACCEPT" else 1
 
     return 2
 
