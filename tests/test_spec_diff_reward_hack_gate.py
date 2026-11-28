@@ -142,3 +142,22 @@ class TestSpecDiffRewardHackGate(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_standalone_attribute_line_belongs_to_next_declaration():
+    """2026-11-28: '@[category ...]' on its own line was folded into the previous def's body."""
+    from proofgate.spec_diff_reward_hack_gate import parse_lean_declarations
+    up = parse_lean_declarations(
+        "noncomputable def gamma : Real :=\n  1 / 3\n\n@[category research solved, AMS 5 11]\n"
+        "theorem upper_HL : gamma ≤ 3/4 := by\n  sorry\n")
+    cand = parse_lean_declarations(
+        "noncomputable def gamma : Real :=\n  1 / 3\n\ntheorem upper_HL : gamma ≤ 3/4 := by\n  norm_num\n")
+    assert up["gamma"].body == cand["gamma"].body == "1 / 3"
+    assert "upper_HL" in up
+
+
+def test_multiline_attribute_and_inline_attribute():
+    from proofgate.spec_diff_reward_hack_gate import parse_lean_declarations
+    d = parse_lean_declarations("def a : Nat :=\n  1\n@[category research solved,\n  AMS 5 11]\n"
+                                "@[simp] theorem t : a = 1 := rfl\n")
+    assert d["a"].body == "1" and d["t"].kind == "theorem"

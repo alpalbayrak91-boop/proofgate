@@ -71,6 +71,7 @@ class LeanDecl:
     body: str
 
 
+_ATTR_PREFIX_RE = re.compile(r"^(?:@\[[^\]]*\]\s*)+")
 _DECL_START_RE = re.compile(
     r"^(?:noncomputable\s+|private\s+|protected\s+)?(theorem|lemma|def|abbrev)\s+([\w.']+)\s*(.*)\Z"
 )
@@ -82,10 +83,28 @@ _TYPE_BINDER_RE = re.compile(r"[\(\{]\s*([\w.'\s]+?)\s*:\s*(?:Type|Sort)\b")
 def parse_lean_declarations(src: str) -> dict[str, LeanDecl]:
     chunks: list[list[str]] = []
     cur: list[str] = []
+    attr_depth = 0  # multi-line @[...] attribute block still open
     for line in strip_lean_comments(src).splitlines():
         st = line.strip()
         if not st:
             continue
+        if attr_depth > 0:
+            attr_depth += st.count("[") - st.count("]")
+            continue
+        if st.startswith("@["):
+            # A standalone attribute line belongs to the NEXT declaration; it must never be folded into the
+            # previous declaration's body (false UPSTREAM-definition-changed rejections, 2026-11-28).
+            depth = st.count("[") - st.count("]")
+            if depth > 0:
+                attr_depth = depth
+                continue
+            rest_after_attrs = _ATTR_PREFIX_RE.sub("", st)
+            if not rest_after_attrs:
+                if cur:
+                    chunks.append(cur)
+                    cur = []
+                continue
+            st = rest_after_attrs
         if _DECL_START_RE.match(st) or st.startswith(("import ", "open ", "namespace ", "end ", "section ")):
             if cur:
                 chunks.append(cur)
